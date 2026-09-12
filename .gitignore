@@ -1,0 +1,18 @@
+.DS_Store
+__pycache__/
+*.pyc
+
+# Flutter / Android
+app/build/
+app/.dart_tool/
+app/.flutter-plugins*
+app/android/.gradle/
+app/android/local.properties
+app/android/key.properties
+*.jks
+*.keystore
+
+# IDE
+.idea/
+*.iml
+.vscode/

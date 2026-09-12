@@ -1,0 +1,48 @@
+name: 采集金价数据
+
+on:
+  schedule:
+    # 北京时间 10:40（品牌金店当天报价已更新）与 16:00（收盘后复查）
+    - cron: "40 2 * * *"
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "collector/**"
+      - ".github/workflows/collect.yml"
+
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 运行采集脚本
+        run: python3 collector/collect.py
+
+      - name: 提交数据变更
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase --autostash origin main || true
+          git add data
+          if git diff --cached --quiet; then
+            echo "没有数据变更，跳过提交"
+          else
+            git commit -m "data: 更新金价数据 $(date -u +'%Y-%m-%d')"
+            git push
+          fi
