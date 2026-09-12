@@ -15,4 +15,7 @@ app/android/key.properties
 # IDE
 .idea/
 *.iml
+
+# 本地工具链（Flutter SDK 等，不入库）
+tools/
 .vscode/

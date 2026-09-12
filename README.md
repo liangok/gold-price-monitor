@@ -28,14 +28,24 @@
 
 ```
 GoldPrice/
-├── collector/                  # 数据采集（Python，零依赖）
-│   ├── sources.py              #   数据源抓取与解析
-│   └── collect.py              #   主脚本：抓取 + 合并 + 生成 JSON
-├── data/                       # 采集产出（Git 即数据库，自动积累历史）
-│   ├── latest.json             #   今日汇总，App 首页直接消费
-│   ├── benchmark_history.json  #   大盘日线（2016-12 至今）
-│   └── brand_history.json      #   品牌报价历史（每天追加一条）
-├── app/                        # Flutter App（开发中）
+├── collector/                     # 数据采集（Python，零依赖）
+│   ├── sources.py                 #   数据源抓取与解析
+│   └── collect.py                 #   主脚本：抓取 + 合并 + 生成 JSON
+├── analysis/                      # 分析与策略验证（Python）
+│   ├── indicators.py              #   指标唯一语义定义（Dart 端口必须对齐）
+│   ├── strategy_backtest.py       #   10 年数据回测
+│   ├── today_signals.py           #   当日信号参考实现（终端预览 App 首页）
+│   └── gen_dart_fixture.py        #   生成跨语言一致性测试夹具
+├── packages/goldprice_domain/     # 纯 Dart 领域层（不依赖 Flutter，可独立测试）
+│   ├── lib/src/                   #   models / indicators / strategy / channels
+│   └── test/                      #   与 Python 参考实现的一致性断言
+├── data/                          # 采集产出（Git 即数据库，自动积累历史）
+│   ├── latest.json                #   今日汇总，App 首页直接消费
+│   ├── benchmark_history.json     #   大盘日线（2016-12 至今）
+│   └── brand_history.json         #   品牌报价历史（每天追加一条）
+├── config/user.json               # 预算 / 目标克重 / 渠道假设 / 提醒阈值
+├── docs/app-design.md             # App 设计文档（已按回测结论修正）
+├── app/                           # Flutter App（待 Flutter SDK 就绪）
 └── .github/workflows/collect.yml  # 每日定时采集
 ```
 

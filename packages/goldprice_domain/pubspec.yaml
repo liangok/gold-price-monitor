@@ -1,0 +1,11 @@
+name: goldprice_domain
+description: 金价监控 App 的纯 Dart 领域层：数据模型、技术指标、策略引擎、渠道计算。
+  不依赖 Flutter，可用 dart test 独立验证，便于与 Python 参考实现做跨语言一致性测试。
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+dev_dependencies:
+  test: ^1.25.0
