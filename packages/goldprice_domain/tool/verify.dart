@@ -132,7 +132,8 @@ void main() {
   checkNum('最便宜渠道总价', cmp.best.totalForTarget, 53489.70, 1e-6);
   checkNum('最贵渠道总价', cmp.worst.totalForTarget, 73150, 1e-6);
   checkNum('节省金额', cmp.savings, 19660.30, 1e-6);
-  checkNum('节省比例', cmp.savingsPct, 0.2687628, 1e-6);
+  // 注意：不要手写四舍五入过的常量，直接用精确表达式，否则会误报
+  checkNum('节省比例', cmp.savingsPct, 19660.30 / 73150, 1e-12);
   checkBool('最便宜渠道是水贝', cmp.best.name == '深圳水贝', true);
 
   // ---------- 5. 一口价折算 ----------

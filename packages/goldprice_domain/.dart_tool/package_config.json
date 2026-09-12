@@ -1,0 +1,16 @@
+{
+  "configVersion": 2,
+  "packages": [
+    {
+      "name": "goldprice_domain",
+      "rootUri": "../",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    }
+  ],
+  "generator": "pub",
+  "generatorVersion": "3.13.3",
+  "flutterRoot": "file:///Users/liangaokai/Documents/Workshop/AI_WorkSpace/GoldPrice/tools/flutter",
+  "flutterVersion": "3.47.4",
+  "pubCache": "file:///Users/liangaokai/Documents/Workshop/AI_WorkSpace/GoldPrice/.toolhome/pub-cache"
+}
