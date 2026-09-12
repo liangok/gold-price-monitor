@@ -150,6 +150,48 @@ Flutter App 完成前，可以先用命令行查看「今天该不该买」：
 > Dart 实现策略引擎时，必须与 analysis/indicators.py 的算法语义保持一致
 > （无未来函数、RSI 用 Wilder 平滑、分位数定义为窗口内占比）。
 
+## 构建与安装 App
+
+### 1. 配置你的仓库地址
+
+编辑 app/lib/config.dart，把占位符换成你自己刚创建的 GitHub 仓库：
+
+    const String kGithubOwner = '你的GitHub用户名';
+    const String kGithubRepo  = 'gold-price-monitor';
+
+### 2. 构建 APK
+
+    source scripts/dev-env.sh      # 指向 Android Studio 自带 JDK 与 Android SDK
+    bash scripts/build-apk.sh      # 领域层自检 → 拉依赖 → 静态分析 → 构建
+
+产物在 app/build/app/outputs/flutter-apk/app-release.apk。
+
+### 3. 安装到小米 13 Ultra
+
+    adb install -r app/build/app/outputs/flutter-apk/app-release.apk
+
+或者把 APK 传到手机，在文件管理器里点击安装（需允许「安装未知来源应用」）。
+
+### 4. 小米 HyperOS 必做设置（否则提醒不触发）
+
+小米的省电策略会杀后台，导致定时提醒失效。请手动设置：
+
+1. 设置 → 应用管理 → 金价监控 → **省电策略 → 无限制**
+2. 同页面 → **允许自启动**
+3. 最近任务列表里下拉该应用卡片 → **加锁**（锁定后台）
+4. 首次启动时允许**通知权限**
+
+## App 功能与信息层级
+
+首页顺序是按回测结论设计的（渠道差异约 40%，远大于择时收益的几个百分点）：
+
+1. **渠道对比** —— 同样预算，品牌店 / 水贝 / 银行金条打金分别能买多少克
+2. **大盘金价** —— 上金所 Au99.99 最新收盘与涨跌
+3. **提醒** —— 核心信号（目标价/单日大跌/RSI 超卖）与仅提示信号（回撤/均线）分开标注
+4. **品牌首饰金比价** —— 12 个大陆品牌排序，标出最低价
+
+趋势页展示 30 天 ~ 全部的历史曲线、MA60 与区间指标。
+
 ## 开发路线图
 
 - [x] 采集层：大盘金价 + 品牌报价 + 每日自动积累历史
