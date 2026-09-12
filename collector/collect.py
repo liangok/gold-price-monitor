@@ -22,7 +22,13 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from sources import CST, FetchError, fetch_benchmark_history, fetch_brand_quotes  # noqa: E402
+from sources import (  # noqa: E402
+    CST,
+    FetchError,
+    fetch_benchmark_history,
+    fetch_bank_bars,
+    fetch_brand_quotes,
+)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "data")
@@ -93,6 +99,16 @@ def main():
         },
     )
 
+    bank_doc = load_json(
+        os.path.join(DATA_DIR, "bank_bar_history.json"),
+        {
+            "schema_version": SCHEMA_VERSION,
+            "source": "金价查询网 各大银行/品牌金店金条价格一览表",
+            "updated_at": None,
+            "records": [],
+        },
+    )
+
     ok = 0
 
     # -------- 1. 大盘金价 -------- #
@@ -135,6 +151,28 @@ def main():
             brand_date = last["date"]
             brands = last["brands"]
 
+    # -------- 3. 银行金条报价 -------- #
+    bank_items = []
+    bank_date = None
+    try:
+        bars = fetch_bank_bars()
+        bank_date = bars["date"]
+        bank_items = bars["items"]
+        days = {r["date"]: r for r in bank_doc.get("records", [])}
+        days[bank_date] = {"date": bank_date, "items": bank_items}
+        bank_doc["records"] = [days[d] for d in sorted(days)]
+        bank_doc["updated_at"] = now_cst()
+        ok += 1
+        n_bank = len([b for b in bank_items if b["is_bank"]])
+        print("[ok] 银行金条: {} 条（其中银行 {} 家） / 数据日期 {}".format(
+            len(bank_items), n_bank, bank_date))
+    except FetchError as exc:
+        print("[warn] 银行金条采集失败，沿用已有数据: {}".format(exc))
+        if bank_doc.get("records"):
+            last = bank_doc["records"][-1]
+            bank_date = last["date"]
+            bank_items = last["items"]
+
     if ok == 0 and not bench_doc.get("records") and not brands:
         print("[error] 没有任何可用数据")
         return 1
@@ -142,7 +180,7 @@ def main():
     bench_records = bench_doc.get("records", [])
     last_bench = bench_records[-1] if bench_records else None
 
-    # -------- 3. 统计与溢价 -------- #
+    # -------- 4. 统计与溢价 -------- #
     mainland = [b for b in brands if b.get("region") == "mainland"]
     golds = {b["name"]: b["gold"] for b in mainland if isinstance(b.get("gold"), (int, float))}
     bars = {b["name"]: b["bar"] for b in mainland if isinstance(b.get("bar"), (int, float))}
@@ -183,11 +221,20 @@ def main():
             "bar": dict_stat(bars),
             "platinum": dict_stat(plats),
         },
+        "bank_bars": {
+            "date": bank_date,
+            "unit": "CNY/g",
+            "items": bank_items,
+            "stats": dict_stat({
+                b["name"]: b["price"] for b in bank_items if b.get("is_bank")
+            }),
+        },
         "premium": premium,
     }
 
     save_json(os.path.join(DATA_DIR, "benchmark_history.json"), bench_doc)
     save_json(os.path.join(DATA_DIR, "brand_history.json"), brand_doc)
+    save_json(os.path.join(DATA_DIR, "bank_bar_history.json"), bank_doc)
     save_json(os.path.join(DATA_DIR, "latest.json"), latest)
 
     # -------- 4. 打印摘要 -------- #
@@ -208,6 +255,11 @@ def main():
     if premium:
         print("首饰金溢价    均价高出大盘 {:.2f} 元/克（{:.1f}%）".format(
             premium["amount"], premium["pct"] * 100))
+    bs = latest["bank_bars"]["stats"]
+    if bs:
+        print("银行金条      {} 家 | 最低 {} {} | 最高 {} {} | 均价 {} 元/克".format(
+            bs["count"], bs["min"]["name"], bs["min"]["price"],
+            bs["max"]["name"], bs["max"]["price"], bs["avg"]))
     return 0
 
 

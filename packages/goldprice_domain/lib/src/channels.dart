@@ -92,16 +92,18 @@ ChannelComparison compareChannels({
   required String brandName,
   required double brandGold,
   required ChannelConfig config,
+  double? bankBarPrice,
 }) {
+  // 银行金条优先使用实时报价（数据来自采集器）；拿不到才回退到「大盘 + 假设加点」。
+  final bankBase =
+      bankBarPrice ?? (benchmarkClose + config.bankBarDiy.benchmarkMarkup);
   final raw = <String, double>{
     brandName + '(最低价)':
         brandGold + config.brandStore.benchmarkMarkup + config.brandStore.laborPerGram,
     '深圳水贝': benchmarkClose +
         config.shuibei.benchmarkMarkup +
         config.shuibei.laborPerGram,
-    '银行金条+打金': benchmarkClose +
-        config.bankBarDiy.benchmarkMarkup +
-        config.bankBarDiy.laborPerGram,
+    '银行金条+打金': bankBase + config.bankBarDiy.laborPerGram,
   };
 
   var bestCost = double.infinity;

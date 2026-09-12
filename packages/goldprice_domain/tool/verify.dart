@@ -120,6 +120,7 @@ void main() {
     benchmarkClose: 939.54,
     brandName: '中国黄金',
     brandGold: 1280,
+    bankBarPrice: 953.54, // 民生银行实时最低价（来自采集器）
     config: config,
   );
   final byName = <String, ChannelQuote>{
@@ -127,7 +128,7 @@ void main() {
   };
   checkNum('中国黄金 克价', byName['中国黄金(最低价)']!.costPerGram, 1330.00);
   checkNum('深圳水贝 克价', byName['深圳水贝']!.costPerGram, 972.54);
-  checkNum('银行金条+打金 克价', byName['银行金条+打金']!.costPerGram, 976.54);
+  checkNum('银行金条+打金 克价', byName['银行金条+打金']!.costPerGram, 978.54);
   checkNum('最便宜渠道总价', cmp.best.totalForTarget, 53489.70, 1e-6);
   checkNum('最贵渠道总价', cmp.worst.totalForTarget, 73150, 1e-6);
   checkNum('节省金额', cmp.savings, 19660.30, 1e-6);

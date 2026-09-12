@@ -131,7 +131,17 @@ def main():
     sb = ch["shuibei"]
     channels.append(("深圳水贝", bench, sb["benchmark_markup"], sb["labor_per_gram"]))
     bb = ch["bank_bar_diy"]
-    channels.append(("银行金条+打金", bench, bb["bar_markup"], bb["labor_per_gram"]))
+    bank_stat = (latest.get("bank_bars") or {}).get("stats")
+    if bank_stat and bank_stat.get("min"):
+        bank_base = bank_stat["min"]["price"]
+        bank_markup = None
+        bank_note = "实时最低银行金条：{} {} 元/克".format(
+            bank_stat["min"]["name"], bank_stat["min"]["price"])
+    else:
+        bank_base = bench
+        bank_markup = bb["benchmark_markup"]
+        bank_note = "缺实时报价，回退为「大盘 + {}」假设".format(bb["benchmark_markup"])
+    channels.append(("银行金条+打金", bank_base, bank_markup, bb["labor_per_gram"]))
 
     print()
     print("【渠道对比】预算 {} 元 / 目标 {} 克    大盘基准 {} 元/克".format(
@@ -155,7 +165,8 @@ def main():
     print("  >>> 买 {} 克：{} 需 {:.0f} 元，{} 需 {:.0f} 元，差 {:.0f} 元（{:.0f}%）".format(
         target, worst[0], worst[2], best[0], best[2], save, save / worst[2] * 100))
     print("  >>> 这比任何择时策略的收益量级都大得多（择时约几个百分点）。")
-    print("  >>> 渠道参数为假设值，可在 config/user.json 中调整。")
+    print("  >>> " + bank_note)
+    print("  >>> 水贝与其他参数可在 config/user.json 中调整。")
     print()
     return 0
 

@@ -165,6 +165,30 @@ class Premium {
   }
 }
 
+/// 银行 / 品牌金店的金条报价（数据源：金价查询网，每日更新）。
+class BankBarQuote {
+  final String name;
+  final String product;
+  final double price;
+  final bool isBank;
+
+  const BankBarQuote({
+    required this.name,
+    required this.product,
+    required this.price,
+    required this.isBank,
+  });
+
+  factory BankBarQuote.fromJson(Map<String, dynamic> json) {
+    return BankBarQuote(
+      name: json['name'] as String,
+      product: json['product'] as String? ?? '',
+      price: (json['price'] as num).toDouble(),
+      isBank: json['is_bank'] as bool? ?? false,
+    );
+  }
+}
+
 /// data/latest.json —— App 首页直接消费的今日汇总。
 class LatestSnapshot {
   final String dataDate;
@@ -172,6 +196,7 @@ class LatestSnapshot {
   final BenchmarkRecord benchmark;
   final List<BrandQuote> brands;
   final Map<String, BrandStats> brandStats;
+  final List<BankBarQuote> bankBars;
   final Premium? premium;
 
   const LatestSnapshot({
@@ -180,6 +205,7 @@ class LatestSnapshot {
     required this.benchmark,
     required this.brands,
     required this.brandStats,
+    this.bankBars = const <BankBarQuote>[],
     this.premium,
   });
 
@@ -195,8 +221,19 @@ class LatestSnapshot {
     return pool.first;
   }
 
+  /// 银行金条中的最低价（用于渠道对比的「银行金条+打金」基准）。
+  double? get cheapestBankBarPrice {
+    final pool = bankBars.where((b) => b.isBank).toList();
+    if (pool.isEmpty) return null;
+    pool.sort((a, b) => a.price.compareTo(b.price));
+    return pool.first.price;
+  }
+
   factory LatestSnapshot.fromJson(Map<String, dynamic> json) {
     final rawBrands = json['brands'] as List<dynamic>? ?? const <dynamic>[];
+    final rawBank = json['bank_bars'] as Map<String, dynamic>?;
+    final rawBankItems =
+        rawBank?['items'] as List<dynamic>? ?? const <dynamic>[];
     final rawStats = json['brand_stats'] as Map<String, dynamic>? ?? const {};
     final stats = <String, BrandStats>{};
     rawStats.forEach((key, value) {
@@ -214,6 +251,9 @@ class LatestSnapshot {
           .map((e) => BrandQuote.fromJson(e as Map<String, dynamic>))
           .toList(growable: false),
       brandStats: stats,
+      bankBars: rawBankItems
+          .map((e) => BankBarQuote.fromJson(e as Map<String, dynamic>))
+          .toList(growable: false),
       premium: rawPremium is Map<String, dynamic>
           ? Premium.fromJson(rawPremium)
           : null,

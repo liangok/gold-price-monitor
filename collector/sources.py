@@ -207,3 +207,59 @@ def fetch_brand_quotes():
     parsed["source"] = "证券之星 零售金商报价"
     parsed["url"] = STOCKSTAR_URL
     return parsed
+
+
+# --------------------------------------------------------------------------- #
+# 银行金条报价：金价查询网「各大银行/品牌金店金条价格一览表」
+# --------------------------------------------------------------------------- #
+HUANGJINJIAGE_BANK_URL = "http://www.huangjinjiage.cn/golden/155283.html"
+
+
+def parse_bank_bar_html(html):
+    """
+    解析「各大银行/品牌金店金条价格一览表」。
+
+    表格列：金条品牌 | 金条品种 | 今日价格 | 报价时间
+    表头行因价格列不是「数字元/克」会被自动跳过。
+    """
+    m = re.search(r"更新[：:]\s*(\d{4})年(\d{1,2})月(\d{1,2})日", html)
+    data_date = None
+    if m:
+        data_date = "{}-{:02d}-{:02d}".format(
+            m.group(1), int(m.group(2)), int(m.group(3)))
+
+    items = []
+    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", html, re.S):
+        cells = []
+        for inner in re.findall(r"<td[^>]*>(.*?)</td>", tr, re.S):
+            text = re.sub(r"<[^>]+>", " ", inner).replace("&nbsp;", " ")
+            cells.append(re.sub(r"\s+", " ", text).strip())
+        if len(cells) < 3:
+            continue
+        brand, product, price_text = cells[0], cells[1], cells[2]
+        pm = re.search(r"(\d+(?:\.\d+)?)\s*元/克", price_text)
+        if not pm:
+            continue
+        price = float(pm.group(1))
+        if not (MAINLAND_MIN <= price <= MAINLAND_MAX):
+            continue
+        items.append({
+            "name": brand,
+            "product": product,
+            "price": price,
+            "quote_time": cells[3] if len(cells) > 3 else None,
+            "is_bank": brand.endswith("银行"),
+        })
+
+    if not items:
+        raise FetchError("金价查询网金条表格解析为空")
+    return {"date": data_date, "items": items}
+
+
+def fetch_bank_bars():
+    """抓取银行与品牌金店的金条报价。"""
+    html = _http_get(HUANGJINJIAGE_BANK_URL)
+    parsed = parse_bank_bar_html(html)
+    parsed["source"] = "金价查询网 各大银行/品牌金店金条价格一览表"
+    parsed["url"] = HUANGJINJIAGE_BANK_URL
+    return parsed
