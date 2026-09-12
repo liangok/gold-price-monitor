@@ -9,4 +9,5 @@ library;
 export 'src/channels.dart';
 export 'src/indicators.dart';
 export 'src/models.dart';
+export 'src/remote.dart';
 export 'src/strategy.dart';

@@ -189,6 +189,21 @@ void main() {
     });
   }
 
+  // ---------- 7. 数据源地址 ----------
+  const repo = RepoConfig(owner: 'someone', repo: 'gold-price-monitor');
+  final latest = repo.latestUrls;
+  checkNum('候选地址数量', latest.length, 2);
+  checkBool(
+      '首选 jsDelivr',
+      latest.first ==
+          'https://cdn.jsdelivr.net/gh/someone/gold-price-monitor@main/data/latest.json',
+      true);
+  checkBool(
+      '回退 raw.githubusercontent',
+      latest[1] ==
+          'https://raw.githubusercontent.com/someone/gold-price-monitor/main/data/latest.json',
+      true);
+
   // ---------- 汇总 ----------
   print('');
   if (_failures == 0) {

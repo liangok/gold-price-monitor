@@ -1,0 +1,21 @@
+name: goldprice
+description: 金价监控 App —— 大盘金价、品牌金店比价、渠道对比与买入提醒。
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  goldprice_domain:
+    path: ../packages/goldprice_domain
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
