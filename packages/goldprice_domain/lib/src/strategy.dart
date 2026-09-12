@@ -41,12 +41,16 @@ class AlertConfig {
 }
 
 class AlertResult {
+  /// 稳定标识，用于跨语言一致性测试与提醒去重。
+  /// 取值与 Python 参考实现 analysis/alerts.py 完全一致。
+  final String key;
   final String name;
   final AlertLevel level;
   final bool triggered;
   final String detail;
 
   const AlertResult({
+    required this.key,
     required this.name,
     required this.level,
     required this.triggered,
@@ -60,6 +64,7 @@ List<AlertResult> evaluateAlerts(IndicatorSnapshot ind, AlertConfig cfg) {
   final target = cfg.targetPrice;
   if (target == null) {
     results.add(const AlertResult(
+      key: 'target_price',
       name: '绝对目标价',
       level: AlertLevel.core,
       triggered: false,
@@ -67,6 +72,7 @@ List<AlertResult> evaluateAlerts(IndicatorSnapshot ind, AlertConfig cfg) {
     ));
   } else {
     results.add(AlertResult(
+      key: 'target_price',
       name: '绝对目标价 <= ' + target.toStringAsFixed(0) + ' 元/克',
       level: AlertLevel.core,
       triggered: ind.close <= target,
@@ -77,6 +83,7 @@ List<AlertResult> evaluateAlerts(IndicatorSnapshot ind, AlertConfig cfg) {
   final drop = cfg.dailyDropPct;
   final change = ind.changePct;
   results.add(AlertResult(
+    key: 'daily_drop',
     name: '单日跌幅 >= ' + drop.toStringAsFixed(1) + '%',
     level: AlertLevel.core,
     triggered: change != null && change <= -drop / 100.0,
@@ -86,6 +93,7 @@ List<AlertResult> evaluateAlerts(IndicatorSnapshot ind, AlertConfig cfg) {
   final oversold = cfg.rsiOversold;
   final rsi = ind.rsi;
   results.add(AlertResult(
+    key: 'rsi',
     name: 'RSI14 < ' + oversold.toStringAsFixed(0),
     level: AlertLevel.core,
     triggered: rsi != null && rsi < oversold,
@@ -97,6 +105,7 @@ List<AlertResult> evaluateAlerts(IndicatorSnapshot ind, AlertConfig cfg) {
   final ddThreshold = cfg.drawdownPct;
   final dd = ind.drawdown;
   results.add(AlertResult(
+    key: 'drawdown',
     name: '距 ' +
         ind.drawdownWindow.toString() +
         ' 日高点回撤 >= ' +
@@ -109,6 +118,7 @@ List<AlertResult> evaluateAlerts(IndicatorSnapshot ind, AlertConfig cfg) {
 
   final maValue = ind.ma(cfg.maWindow);
   results.add(AlertResult(
+    key: 'ma',
     name: '收盘 < MA' + cfg.maWindow.toString(),
     level: AlertLevel.hint,
     triggered: maValue != null && ind.close < maValue,

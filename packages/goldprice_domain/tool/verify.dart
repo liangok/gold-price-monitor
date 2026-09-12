@@ -155,6 +155,40 @@ void main() {
   );
   checkBool('等于参考价不应判为偏贵', ok.overpriced, false);
 
+  // ---------- 6. 提醒规则（对照 Python 的 alert_variants）----------
+  final variants = fixture['alert_variants'] as Map<String, dynamic>;
+  if (snapshot != null) {
+    variants.forEach((name, raw) {
+      final v = raw as Map<String, dynamic>;
+      final c = v['config'] as Map<String, dynamic>;
+      final cfg = AlertConfig(
+        targetPrice: (c['target_price'] as num?)?.toDouble(),
+        dailyDropPct: (c['daily_drop_pct'] as num).toDouble(),
+        rsiOversold: (c['rsi_oversold'] as num).toDouble(),
+        drawdownPct: (c['drawdown_pct'] as num).toDouble(),
+        maWindow: (c['ma_window'] as num).toInt(),
+      );
+      final results = evaluateAlerts(snapshot, cfg);
+      final byKey = <String, AlertResult>{
+        for (final r in results) r.key: r,
+      };
+      final expectedTriggered = v['triggered'] as Map<String, dynamic>;
+      checkNum('alert 数量[' + name + ']', results.length,
+          expectedTriggered.length);
+      expectedTriggered.forEach((key, want) {
+        final got = byKey[key];
+        if (got == null) {
+          _failures++;
+          _checks++;
+          print('  FAIL  alert[' + name + '/' + key + ']  缺少该规则');
+          return;
+        }
+        checkBool('alert[' + name + '/' + key + ']', got.triggered,
+            want as bool);
+      });
+    });
+  }
+
   // ---------- 汇总 ----------
   print('');
   if (_failures == 0) {

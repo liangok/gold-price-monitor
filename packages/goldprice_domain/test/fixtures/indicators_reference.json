@@ -1059,5 +1059,183 @@
    "250": 55.8958531420164,
    "519": 45.43637917506134
   }
+ },
+ "alert_variants": {
+  "default": {
+   "config": {
+    "target_price": null,
+    "daily_drop_pct": 2.0,
+    "rsi_oversold": 30.0,
+    "drawdown_pct": 8.0,
+    "ma_window": 60
+   },
+   "triggered": {
+    "target_price": false,
+    "daily_drop": false,
+    "rsi": false,
+    "drawdown": true,
+    "ma": false
+   }
+  },
+  "target_above": {
+   "config": {
+    "target_price": 1000.0,
+    "daily_drop_pct": 2.0,
+    "rsi_oversold": 30.0,
+    "drawdown_pct": 8.0,
+    "ma_window": 60
+   },
+   "triggered": {
+    "target_price": true,
+    "daily_drop": false,
+    "rsi": false,
+    "drawdown": true,
+    "ma": false
+   }
+  },
+  "target_below": {
+   "config": {
+    "target_price": 900.0,
+    "daily_drop_pct": 2.0,
+    "rsi_oversold": 30.0,
+    "drawdown_pct": 8.0,
+    "ma_window": 60
+   },
+   "triggered": {
+    "target_price": false,
+    "daily_drop": false,
+    "rsi": false,
+    "drawdown": true,
+    "ma": false
+   }
+  },
+  "drop_loose": {
+   "config": {
+    "target_price": null,
+    "daily_drop_pct": 1.0,
+    "rsi_oversold": 30.0,
+    "drawdown_pct": 8.0,
+    "ma_window": 60
+   },
+   "triggered": {
+    "target_price": false,
+    "daily_drop": true,
+    "rsi": false,
+    "drawdown": true,
+    "ma": false
+   }
+  },
+  "drop_tight": {
+   "config": {
+    "target_price": null,
+    "daily_drop_pct": 5.0,
+    "rsi_oversold": 30.0,
+    "drawdown_pct": 8.0,
+    "ma_window": 60
+   },
+   "triggered": {
+    "target_price": false,
+    "daily_drop": false,
+    "rsi": false,
+    "drawdown": true,
+    "ma": false
+   }
+  },
+  "rsi_loose": {
+   "config": {
+    "target_price": null,
+    "daily_drop_pct": 2.0,
+    "rsi_oversold": 50.0,
+    "drawdown_pct": 8.0,
+    "ma_window": 60
+   },
+   "triggered": {
+    "target_price": false,
+    "daily_drop": false,
+    "rsi": true,
+    "drawdown": true,
+    "ma": false
+   }
+  },
+  "rsi_tight": {
+   "config": {
+    "target_price": null,
+    "daily_drop_pct": 2.0,
+    "rsi_oversold": 30.0,
+    "drawdown_pct": 8.0,
+    "ma_window": 60
+   },
+   "triggered": {
+    "target_price": false,
+    "daily_drop": false,
+    "rsi": false,
+    "drawdown": true,
+    "ma": false
+   }
+  },
+  "ma20": {
+   "config": {
+    "target_price": null,
+    "daily_drop_pct": 2.0,
+    "rsi_oversold": 30.0,
+    "drawdown_pct": 8.0,
+    "ma_window": 20
+   },
+   "triggered": {
+    "target_price": false,
+    "daily_drop": false,
+    "rsi": false,
+    "drawdown": true,
+    "ma": true
+   }
+  },
+  "ma60": {
+   "config": {
+    "target_price": null,
+    "daily_drop_pct": 2.0,
+    "rsi_oversold": 30.0,
+    "drawdown_pct": 8.0,
+    "ma_window": 60
+   },
+   "triggered": {
+    "target_price": false,
+    "daily_drop": false,
+    "rsi": false,
+    "drawdown": true,
+    "ma": false
+   }
+  },
+  "drawdown_loose": {
+   "config": {
+    "target_price": null,
+    "daily_drop_pct": 2.0,
+    "rsi_oversold": 30.0,
+    "drawdown_pct": 5.0,
+    "ma_window": 60
+   },
+   "triggered": {
+    "target_price": false,
+    "daily_drop": false,
+    "rsi": false,
+    "drawdown": true,
+    "ma": false
+   }
+  },
+  "drawdown_tight": {
+   "config": {
+    "target_price": null,
+    "daily_drop_pct": 2.0,
+    "rsi_oversold": 30.0,
+    "drawdown_pct": 15.0,
+    "ma_window": 60
+   },
+   "triggered": {
+    "target_price": false,
+    "daily_drop": false,
+    "rsi": false,
+    "drawdown": false,
+    "ma": false
+   }
+  }
  }
 }

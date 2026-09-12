@@ -4,7 +4,8 @@
 当日信号参考实现 —— 在终端预览 App 首页会显示什么。
 
 这是 App (Flutter/Dart) 策略引擎的语义基准：Dart 实现必须与这里的结果一致。
-指标算法见 analysis/indicators.py，阈值来自 config/user.json。
+指标算法见 analysis/indicators.py，提醒规则见 analysis/alerts.py，
+阈值来自 config/user.json。
 
 用法: python3 analysis/today_signals.py
 """
@@ -18,6 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
+from alerts import ORDER, evaluate_alerts  # noqa: E402
 from indicators import compute_latest  # noqa: E402
 
 
@@ -49,7 +51,6 @@ def main():
     closes = [float(r["close"]) for r in recs]
 
     ind = compute_latest(closes)
-    alerts_cfg = cfg["alerts"]
 
     print("=" * 62)
     print("  GoldPrice 今日信号   （数据日期 {}）".format(latest.get("data_date")))
@@ -60,8 +61,7 @@ def main():
     print("【大盘 Au99.99】  {}".format(dates[ind["index"]]))
     print("  收盘价      {} 元/克".format(fmt(ind["close"])))
     print("  日涨跌      {}".format(fmt((ind["change_pct"] or 0) * 100, 2, "%")))
-    print("  MA20 / MA60 {} / {}".format(
-        fmt(ind["ma"].get(20)), fmt(ind["ma"].get(60))))
+    print("  MA20 / MA60 {} / {}".format(fmt(ind["ma"].get(20)), fmt(ind["ma"].get(60))))
     print("  距90日高点  {}".format(fmt((ind["drawdown"] or 0) * 100, 2, "%")))
     print("  近1年分位   {}".format(fmt((ind["percentile"] or 0) * 100, 1, "%")))
     print("  RSI14       {}".format(fmt(ind["rsi"], 1)))
@@ -69,48 +69,17 @@ def main():
     # ---------- 提醒 ----------
     print()
     print("【提醒】判定阈值来自 config/user.json")
-    results = []
+    alerts = evaluate_alerts(ind, cfg["alerts"])
+    for key in ORDER:
+        item = alerts[key]
+        mark = "[已触发]" if item["triggered"] else "[  --  ]"
+        level = "核心" if item["level"] == "core" else "仅提示"
+        print("  {} {} [{}]  {}".format(mark, pad(item["name"], 26), level, item["detail"]))
 
-    tp = alerts_cfg.get("target_price")
-    if tp:
-        hit = ind["close"] <= tp
-        results.append(("绝对目标价 <= {} 元/克".format(tp), hit, "核心",
-                        "现价 {} 元/克".format(fmt(ind["close"]))))
-    else:
-        results.append(("绝对目标价", False, "核心", "未设置（建议设置：牛市里分位/均线都会失效）"))
-
-    dd = alerts_cfg.get("daily_drop_pct")
-    if dd:
-        hit = ind["change_pct"] is not None and ind["change_pct"] <= -dd / 100.0
-        results.append(("单日跌幅 >= {}%".format(dd), hit, "核心",
-                        "今日 {}，10年回测20日收益 +1.96%".format(fmt((ind["change_pct"] or 0) * 100, 2, "%"))))
-
-    ro = alerts_cfg.get("rsi_oversold")
-    if ro:
-        hit = ind["rsi"] is not None and ind["rsi"] < ro
-        results.append(("RSI14 < {}".format(ro), hit, "核心",
-                        "当前 {}，10年回测20日收益 +3.02%（最优）".format(fmt(ind["rsi"], 1))))
-
-    dw = alerts_cfg.get("drawdown_pct")
-    if dw:
-        hit = ind["drawdown"] is not None and ind["drawdown"] <= -dw / 100.0
-        results.append(("距90日高点回撤 >= {}%".format(dw), hit, "仅提示",
-                        "当前 {}，历史上跑输基准".format(fmt((ind["drawdown"] or 0) * 100, 2, "%"))))
-
-    mw = alerts_cfg.get("ma_window")
-    if mw and ind["ma"].get(mw):
-        hit = ind["close"] < ind["ma"][mw]
-        results.append(("收盘 < MA{}".format(mw), hit, "仅提示",
-                        "MA{} = {}，历史上跑输基准".format(mw, fmt(ind["ma"][mw]))))
-
-    for name, hit, level, note in results:
-        mark = "[已触发]" if hit else "[  --  ]"
-        print("  {} {} [{}]  {}".format(mark, pad(name, 26), level, note))
-
-    triggered = [r for r in results if r[1]]
+    hits = sum(1 for k in ORDER if alerts[k]["triggered"])
     print()
-    if triggered:
-        print("  >>> 当前有 {} 条触发，建议关注".format(len(triggered)))
+    if hits:
+        print("  >>> 当前有 {} 条触发，建议关注".format(hits))
     else:
         print("  >>> 当前无触发。这是常态 —— 回测显示最好的信号 10 年只出现 39 次。")
 
@@ -120,8 +89,8 @@ def main():
     target = cfg["target_grams"]
     bench = float(latest["benchmark"]["close"])
 
-    mainland = [b for b in latest["brands"] if b.get("region") == "mainland"
-                and isinstance(b.get("gold"), (int, float))]
+    mainland = [b for b in latest["brands"]
+                if b.get("region") == "mainland" and isinstance(b.get("gold"), (int, float))]
     cheapest = min(mainland, key=lambda b: b["gold"])
 
     channels = []
@@ -130,6 +99,7 @@ def main():
                      cheapest["gold"], None, bs["labor_per_gram"]))
     sb = ch["shuibei"]
     channels.append(("深圳水贝", bench, sb["benchmark_markup"], sb["labor_per_gram"]))
+
     bb = ch["bank_bar_diy"]
     bank_stat = (latest.get("bank_bars") or {}).get("stats")
     if bank_stat and bank_stat.get("min"):
@@ -146,17 +116,22 @@ def main():
     print()
     print("【渠道对比】预算 {} 元 / 目标 {} 克    大盘基准 {} 元/克".format(
         budget, target, fmt(bench)))
-    print("  {:<16}{:>10}{:>12}{:>12}{:>12}".format("渠道", "克价", "{}克总价".format(target), "预算可买", "vs最好"))
-    best_cost = None
+    header = "  {}{:>10}{:>12}{:>12}{:>12}".format(
+        pad("渠道", 18), "克价", "{}克总价".format(target), "预算可买", "vs最好")
+    print(header)
+
     rows = []
+    best_cost = None
     for name, base, markup, labor in channels:
         cost = base + (markup or 0) + labor
         rows.append((name, cost, target * cost, budget / cost))
         best_cost = cost if best_cost is None else min(best_cost, cost)
+
     for name, cost, total, grams in rows:
         diff = cost - best_cost
         print("  {}{:>10.2f}{:>12.0f}{:>12.1f}{:>12}".format(
-            pad(name, 18), cost, total, grams, "基准" if diff == 0 else "+{:.0f}元/克".format(diff)))
+            pad(name, 18), cost, total, grams,
+            "基准" if diff == 0 else "+{:.0f}元/克".format(diff)))
 
     worst = max(rows, key=lambda r: r[1])
     best = min(rows, key=lambda r: r[1])
