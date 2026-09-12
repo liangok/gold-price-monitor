@@ -32,60 +32,18 @@ def load():
     return [r["date"] for r in recs], [float(r["close"]) for r in recs]
 
 
-def sma(vals, i, n):
-    if i + 1 < n:
-        return None
-    return sum(vals[i - n + 1 : i + 1]) / n
+import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-def rsi_series(vals, n=14):
-    """Wilder 平滑 RSI。"""
-    out = [None] * len(vals)
-    if len(vals) <= n:
-        return out
-    gain = loss = 0.0
-    for k in range(1, n + 1):
-        d = vals[k] - vals[k - 1]
-        gain += max(d, 0.0)
-        loss += max(-d, 0.0)
-    ag, al = gain / n, loss / n
-    out[n] = 100.0 if al == 0 else 100.0 - 100.0 / (1.0 + ag / al)
-    for k in range(n + 1, len(vals)):
-        d = vals[k] - vals[k - 1]
-        ag = (ag * (n - 1) + max(d, 0.0)) / n
-        al = (al * (n - 1) + max(-d, 0.0)) / n
-        out[k] = 100.0 if al == 0 else 100.0 - 100.0 / (1.0 + ag / al)
-    return out
-
-
-def rolling_max(vals, i, window):
-    if i + 1 < window:
-        return None
-    return max(vals[i - window + 1 : i + 1])
-
-
-def percentile(vals, i, window):
-    if i + 1 < window:
-        return None
-    w = vals[i - window + 1 : i + 1]
-    cur = vals[i]
-    return sum(1 for v in w if v <= cur) / len(w)
-
-
-def forward_return(vals, i, h):
-    if i + h >= len(vals):
-        return None
-    return vals[i + h] / vals[i] - 1.0
-
-
-def forward_stats(vals, i, h):
-    """触发后 h 个交易日内的：最低点相对触发价的跌幅、期间最大涨幅。"""
-    if i + h >= len(vals):
-        return None
-    window = vals[i + 1 : i + h + 1]
-    if not window:
-        return None
-    return min(window) / vals[i] - 1.0, max(window) / vals[i] - 1.0
+from indicators import (  # noqa: E402
+    forward_return,
+    forward_stats,
+    percentile,
+    rolling_max,
+    rsi_series,
+    sma,
+)
 
 
 def summarize(name, triggers, dates, closes, total_days, baseline_fwd):

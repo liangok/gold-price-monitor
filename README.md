@@ -128,6 +128,18 @@ python3 collector/collect.py
 
 因此 App 的信息层级被重新设计为：**渠道对比与比价优先，提醒其次**。
 
+### 当日信号预览（App 首页的参考实现）
+
+Flutter App 完成前，可以先用命令行查看「今天该不该买」：
+
+    python3 analysis/today_signals.py
+
+输出与 App 首页一一对应（大盘状态 / 提醒触发 / 渠道对比）。
+预算、目标克重、渠道假设、提醒阈值都在 config/user.json 中调整。
+
+> Dart 实现策略引擎时，必须与 analysis/indicators.py 的算法语义保持一致
+> （无未来函数、RSI 用 Wilder 平滑、分位数定义为窗口内占比）。
+
 ## 开发路线图
 
 - [x] 采集层：大盘金价 + 品牌报价 + 每日自动积累历史
