@@ -57,6 +57,34 @@ dart run tool/verify.dart
 - `scripts/dev-env.sh`：自动接上 Android Studio 的 JDK 25 与 Android SDK
   （还会探测 `$HOME` 是否可写，不可写时自动把缓存收进仓库）
 
+## 更新：2026-09-13（第二次排查）
+
+停掉 Gradle 守护进程后，把 `ndkVersion` 从 `app/android/app/build.gradle.kts` 去掉，
+错误**从「安装失败」变成**：
+
+```
+NDK not configured. Download it with SDK manager.
+Preferred NDK version is '28.2.13676358'.
+```
+
+**结论：这个 NDK 是 AGP 9.1 在配置阶段就强制的，不是我们项目需要** ——
+项目里没有任何 `externalNativeBuild` / `jniLibs` / 原生代码。
+
+所以：**装好 NDK 就能过，代码不用改。** 已把 `build.gradle.kts` 恢复成
+Flutter 模板标准写法（`ndkVersion = flutter.ndkVersion`）。
+
+**要装的版本：`28.2.13676358`**（Flutter 与 AGP 都指定这个）。
+
+装完验证：
+
+```
+cd app/android && ./gradlew --stop
+cd ../.. && bash scripts/build-apk.sh
+```
+
+> 如果 Android Studio 只提供其它版本，改 `app/android/app/build.gradle.kts` 里的
+> `ndkVersion` 与之对齐即可（或把那行去掉，让 AGP 用它自己的首选版本）。
+
 ## 二、当前卡点：构建 APK 时 NDK 安装失败
 
 现象：
