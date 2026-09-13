@@ -34,6 +34,44 @@ jobs:
       - name: 运行采集脚本
         run: python3 collector/collect.py
 
+      - name: 输出摘要到 Job Summary
+        run: |
+          python3 - <<'PYEOF'
+          import json
+
+          doc = json.load(open("data/latest.json", encoding="utf-8"))
+          bench = doc.get("benchmark") or {}
+          gold = (doc.get("brand_stats") or {}).get("gold") or {}
+          bar = (doc.get("brand_stats") or {}).get("bar") or {}
+          bank = (doc.get("bank_bars") or {}).get("stats") or {}
+          prem = doc.get("premium") or {}
+
+          lines = ["## 金价采集摘要", ""]
+          lines.append("- 数据日期：" + str(doc.get("data_date")))
+          lines.append("- 大盘 Au99.99（" + str(bench.get("date")) + "）："
+                       + str(bench.get("close")) + " 元/克")
+          if gold.get("min"):
+              lines.append("- 品牌首饰金：最低 " + gold["min"]["name"] + " "
+                           + str(gold["min"]["price"]) + "，最高 " + gold["max"]["name"]
+                           + " " + str(gold["max"]["price"]) + "，均价 " + str(gold.get("avg")))
+          if bar.get("min"):
+              lines.append("- 品牌金条：最低 " + bar["min"]["name"] + " "
+                           + str(bar["min"]["price"]) + "，最高 " + bar["max"]["name"]
+                           + " " + str(bar["max"]["price"]))
+          if bank.get("min"):
+              lines.append("- 银行金条：最低 " + bank["min"]["name"] + " "
+                           + str(bank["min"]["price"]) + "，最高 " + bank["max"]["name"]
+                           + " " + str(bank["max"]["price"]))
+          if prem.get("amount") is not None:
+              lines.append("- 首饰金溢价：高出大盘 " + str(prem["amount"]) + " 元/克（"
+                           + str(round((prem.get("pct") or 0) * 100, 1)) + "%）")
+
+          with open("SUMMARY.md", "w", encoding="utf-8") as fh:
+              fh.write("\n".join(lines) + "\n")
+          PYEOF
+          cat SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
+          rm -f SUMMARY.md
+
       - name: 提交数据变更
         run: |
           git config user.name "github-actions[bot]"
