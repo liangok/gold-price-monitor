@@ -57,6 +57,65 @@ dart run tool/verify.dart
 - `scripts/dev-env.sh`：自动接上 Android Studio 的 JDK 25 与 Android SDK
   （还会探测 `$HOME` 是否可写，不可写时自动把缓存收进仓库）
 
+## 更新：2026-09-13 深夜 —— 通知栏提醒已完成 ✅
+
+目标里的「**按策略发送手机通知栏提醒**」这一项，代码写完并构建验证通过。
+
+### 新增文件
+
+- `lib/services/notification_service.dart` —— 通知封装（含 Android 13+ 运行时授权）
+- `lib/services/alert_settings.dart` —— 提醒设置存本机（SharedPreferences），
+  并实现「同一规则同一天只提醒一次」的去重
+- `lib/services/alert_runner.dart` —— 拉行情 → 判定策略 → 发通知
+- `lib/services/background_worker.dart` —— WorkManager 每 6 小时后台检查
+- `lib/ui/settings_page.dart` —— 新增「提醒」标签页：
+  开关 / 目标价 / 发送测试通知 / 立即检查 / 小米保活说明
+
+### 两个刻意的设计决定
+
+1. **提醒只基于真实网络数据，绝不使用离线快照**。
+   用打包快照判定可能因数据陈旧而误报。
+2. **数据新鲜度保护**：`latest.json` 的 `generated_at` 超过 **72 小时** 未更新就跳过提醒，
+   避免采集端挂掉后还在用旧行情发通知。
+
+另外：回撤 / 均线属于「仅提示」，默认**不发通知**（回测里跑输基准，噪音大），
+单独给了开关。
+
+### Android 侧改动
+
+- 开启 **desugaring**（`flutter_local_notifications` 的硬性要求，
+  见 `app/android/app/build.gradle.kts` 的 `isCoreLibraryDesugaringEnabled` 与 `coreLibraryDesugaring`）
+- 清单补 `RECEIVE_BOOT_COMPLETED`（重启后让 WorkManager 重新排程）
+
+### 验证证据
+
+```
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.RECEIVE_BOOT_COMPLETED'
+uses-permission: name='android.permission.POST_NOTIFICATIONS'
+uses-permission: name='android.permission.VIBRATE'
+uses-permission: name='android.permission.WAKE_LOCK'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+application-label:'金价监控'
+
+合并清单里已包含 WorkManager 组件：
+  androidx.work.impl.background.systemjob.SystemJobService
+  androidx.work.impl.background.systemalarm.RescheduleReceiver
+  androidx.work.impl.WorkManagerInitializer
+
+APK: 51.1MB，flutter analyze 0 error / 0 warning，flutter test 通过
+```
+
+### ⚠️ 仍需真机验证（我这边做不到）
+
+- 通知能否真的弹出来（建议先点设置页的「发送测试通知」）
+- WorkManager 在小 米 HyperOS 上能否按时唤醒 —— 这是小米最容易拦的地方
+
+### 已知未做
+
+- 49 条 info 级 lint（多为字符串拼接风格，不影响运行）
+- GitHub 仓库仍未创建（见下一节）
+
 ## 更新：2026-09-13 晚 —— APK 已构建成功 ✅
 
 **产物：`app/build/app/outputs/flutter-apk/app-release.apk`（46.8MB）**
