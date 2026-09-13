@@ -193,16 +193,21 @@ void main() {
   // ---------- 7. 数据源地址 ----------
   const repo = RepoConfig(owner: 'someone', repo: 'gold-price-monitor');
   final latest = repo.latestUrls;
-  checkNum('候选地址数量', latest.length, 2);
+  checkNum('候选地址数量', latest.length, 4);
   checkBool(
-      'raw 在前（顺序非决定性，真正选择逻辑是比数据时间戳）',
+      '首选用 api.github.com（实测最快且最新）',
       latest.first ==
-          'https://raw.githubusercontent.com/someone/gold-price-monitor/main/data/latest.json',
+          'https://api.github.com/repos/someone/gold-price-monitor/contents/data/latest.json?ref=main',
       true);
   checkBool(
-      'jsDelivr 作为候选',
+      'gcore.jsdelivr 作为第二候选',
       latest[1] ==
-          'https://cdn.jsdelivr.net/gh/someone/gold-price-monitor@main/data/latest.json',
+          'https://gcore.jsdelivr.net/gh/someone/gold-price-monitor@main/data/latest.json',
+      true);
+  checkBool(
+      'raw 作为最后候选（国内常被墙）',
+      latest.last ==
+          'https://raw.githubusercontent.com/someone/gold-price-monitor/main/data/latest.json',
       true);
 
   // ---------- 8. 数据时间戳解析（用于在多个数据源之间挑较新的）----------
