@@ -19,3 +19,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # 离线快照：网络拉不到 GitHub 数据时回退用（见 lib/data/repository.dart）
+  assets:
+    - assets/data/

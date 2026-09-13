@@ -85,6 +85,7 @@ class _HomePageState extends State<HomePage> {
             child: ListView(
               padding: const EdgeInsets.all(12),
               children: <Widget>[
+                if (widget.repository.usingBundledData) _offlineBanner(context),
                 _benchmarkCard(context, data),
                 const SizedBox(height: 12),
                 _channelCard(context, data, scheme),
@@ -97,6 +98,30 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  /// 数据来自打包快照时的提示（说明网络没拉到 GitHub 上的最新数据）。
+  Widget _offlineBanner(BuildContext context) {
+    return Card(
+      color: Theme.of(context).colorScheme.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const Icon(Icons.cloud_off, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '当前显示的是打包进 App 的快照数据，不是最新的。'
+                '联网成功后会显示实时数据。',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

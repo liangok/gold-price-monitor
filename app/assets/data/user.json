@@ -1,0 +1,28 @@
+{
+  "_comment": "用户配置：预算、目标克重、渠道假设、提醒阈值。App 与脚本共用同一套语义。",
+  "budget_cny": 75000,
+  "target_grams": 55,
+  "channel_assumptions": {
+    "brand_store": {
+      "labor_per_gram": 50,
+      "_note": "品牌店工费，古法金/3D硬金可能更高；一口价商品不适用"
+    },
+    "shuibei": {
+      "benchmark_markup": 3,
+      "labor_per_gram": 30,
+      "_note": "深圳水贝：接近大盘价 + 少量点差 + 工费"
+    },
+    "bank_bar_diy": {
+      "benchmark_markup": 12,
+      "labor_per_gram": 25,
+      "_note": "银行投资金条加点 + 找师傅打金工费"
+    }
+  },
+  "alerts": {
+    "target_price": null,
+    "daily_drop_pct": 2,
+    "rsi_oversold": 30,
+    "drawdown_pct": 8,
+    "ma_window": 60
+  }
+}

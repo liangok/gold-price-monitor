@@ -57,6 +57,43 @@ dart run tool/verify.dart
 - `scripts/dev-env.sh`：自动接上 Android Studio 的 JDK 25 与 Android SDK
   （还会探测 `$HOME` 是否可写，不可写时自动把缓存收进仓库）
 
+## 更新：2026-09-13 晚 —— APK 已构建成功 ✅
+
+**产物：`app/build/app/outputs/flutter-apk/app-release.apk`（46.8MB）**
+
+今天解决了三个问题：
+
+1. **NDK 版本不一致**：你装的是 `30.0.16248370`，Flutter 默认要 `28.2.13676358`。
+   已在 `app/android/app/build.gradle.kts` 里显式对齐到本机版本（项目无原生代码，任意版本均可）。
+2. **缺 Android SDK Platform 36**：本机只有 `android-37.0`，Gradle 已自动装上 36。
+3. **⚠️ release 包缺 INTERNET 权限（关键 bug）**：
+   Flutter 模板只把 `INTERNET` 放进 debug / profile 清单，**不会进入 release 包**，
+   正式版装到手机上会完全无法联网。已在 `app/android/app/src/main/AndroidManifest.xml` 补上，
+   并用 `aapt2 dump badging` 验证通过。
+
+另外：
+- 应用名改为「**金价监控**」
+- 新增**离线快照**：`data/*.json` 与 `config/user.json` 会被复制到 `app/assets/data/`
+  一起打进 APK；网络拉不到时自动回退，首页显示提示。
+  （`scripts/sync-assets.sh`，已接进 `scripts/build-apk.sh` 第一步）
+
+### 验证证据
+
+```
+package: name='com.liangaokai.goldprice' versionCode='1' versionName='0.1.0'
+uses-permission: name='android.permission.INTERNET'
+application-label:'金价监控'
+minSdkVersion:'24'  targetSdkVersion:'36'  compileSdkVersion='36'
+APK 内含 assets/data/{latest,benchmark_history,brand_history,bank_bar_history,user}.json
+```
+
+### 仍然待办
+
+- **GitHub 仓库还没建**：`liangok/gold-price-monitor` 返回 404（SSH 探测 Repository not found）。
+  remote 已配好、SSH 已认证为 `liangok`，仓库建好后 `git push -u origin main` 即可。
+- 通知栏提醒 + 小米 HyperOS 保活引导（未开始）
+- 35 条 info 级 lint（不影响运行）
+
 ## 更新：2026-09-13（第二次排查）
 
 停掉 Gradle 守护进程后，把 `ndkVersion` 从 `app/android/app/build.gradle.kts` 去掉，
