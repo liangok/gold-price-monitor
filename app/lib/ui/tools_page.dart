@@ -5,6 +5,7 @@ import 'package:goldprice_domain/goldprice_domain.dart';
 
 import '../data/repository.dart';
 import '../services/plan_store.dart';
+import 'widgets/ios_card.dart';
 
 class ToolsData {
   final LatestSnapshot snapshot;
@@ -154,21 +155,16 @@ class _ToolsPageState extends State<ToolsPage> {
       );
     }
 
-    return Card(
+    return IosCard(
+      title: '一口价折算克价',
+      info: '把「一口价」商品的总价除以克重，看它到底合多少克价。'
+          '很多一口价折算下来是正常首饰金的 1.2~1.5 倍，是买五金最容易吃亏的地方。',
+      padding: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const Text('一口价折算克价（防坑）',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 4),
-            Text(
-              '把「一口价」商品的总价除以克重，看它到底合多少克价。'
-              '很多一口价折算下来是正常首饰金的 1.2~1.5 倍。',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 12),
             Row(
               children: <Widget>[
                 Expanded(
@@ -280,20 +276,16 @@ class _ToolsPageState extends State<ToolsPage> {
       config: config,
     );
 
-    return Card(
+    return IosCard(
+      title: '预算能买多少克',
+      info: '同样的钱，不同渠道买到的克重差别很大 —— 这是本项目最想让你看到的一件事。'
+          '渠道克价为可调假设值，见仓库 config/user.json。',
+      padding: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const Text('预算能买多少克',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 4),
-            Text(
-              '同样的钱，不同渠道买到的克重差别很大 —— 这是本项目最想让你看到的一件事。',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 12),
             TextField(
               controller: _budget,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -399,30 +391,20 @@ class _ToolsPageState extends State<ToolsPage> {
     }
     final double gap = worst.total - best.total;
 
-    return Card(
+    return IosCard(
+      title: '五金清单',
+      info: '逐件录入你的五金，算出整份清单在各渠道要花多少钱。'
+          '工费按每件填 —— 古法金、3D 硬金差别很大。',
+      padding: EdgeInsets.zero,
+      trailing: TextButton(
+        onPressed: _resetPlan,
+        child: const Text('恢复默认'),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                const Text('五金清单',
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const Spacer(),
-                TextButton(
-                  onPressed: _resetPlan,
-                  child: const Text('恢复默认'),
-                ),
-              ],
-            ),
-            Text(
-              '逐件录入你的五金，算出整份清单在各渠道要花多少钱。'
-              '工费按每件填 —— 古法金、3D 硬金差别很大。',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 10),
             Row(
               children: const <Widget>[
                 Expanded(

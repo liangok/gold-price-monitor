@@ -4,6 +4,9 @@ import '../services/alert_runner.dart';
 import '../services/alert_settings.dart';
 import '../services/background_worker.dart';
 import '../services/notification_service.dart';
+import 'theme.dart';
+import 'widgets/ios_card.dart';
+import 'widgets/ios_rows.dart';
 import '../services/system_channel.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -115,51 +118,44 @@ class _SettingsPageState extends State<SettingsPage>
           : ListView(
               padding: const EdgeInsets.all(12),
               children: <Widget>[
-                Card(
+                IosCard(
+                  padding: EdgeInsets.zero,
                   child: Column(
                     children: <Widget>[
-                      SwitchListTile(
+                      IosSwitchRow(
+                        title: '启用提醒',
+                        subtitle: '后台每 6 小时检查一次，触发时发通知',
                         value: settings.enabled,
-                        title: const Text('启用提醒'),
-                        subtitle: const Text('后台每 6 小时检查一次，触发时发通知'),
                         onChanged: (bool v) =>
                             _apply(settings.copyWith(enabled: v)),
                       ),
-                      if (!_permissionGranted)
-                        ListTile(
-                          leading: const Icon(Icons.warning_amber),
-                          title: const Text('通知权限未开启'),
-                          subtitle: const Text('Android 13+ 需要授权才能收到提醒'),
-                          trailing: FilledButton(
-                            onPressed: () async {
-                              final ok =
-                                  await NotificationService.requestPermission();
-                              if (!mounted) return;
-                              setState(() => _permissionGranted = ok);
-                            },
-                            child: const Text('去授权'),
-                          ),
+                      if (!_permissionGranted) ...<Widget>[
+                        const IosSeparator(),
+                        IosRow(
+                          icon: Icons.notifications_off_outlined,
+                          title: '通知权限未开启',
+                          subtitle: 'Android 13+ 需要授权才能收到提醒',
+                          trailingText: '去授权',
+                          onTap: () async {
+                            final bool ok = await NotificationService
+                                .requestPermission();
+                            if (!mounted) return;
+                            setState(() => _permissionGranted = ok);
+                          },
                         ),
+                      ],
                     ],
                   ),
                 ),
                 const SizedBox(height: 12),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        const Text('绝对目标价',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16)),
-                        const SizedBox(height: 4),
-                        Text(
-                          '大盘价跌到这个价以下就提醒。牛市里历史分位/均线都会失效，'
-                          '绝对价位是最可靠的锚。留空表示不设。',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 8),
+                IosCard(
+                  title: '绝对目标价',
+                  info: '大盘价跌到这个价以下就提醒。'
+                      '牛市里历史分位、均线都会失效，绝对价位是最可靠的锚。'
+                      '留空表示不设。',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
                         TextField(
                           controller: _targetController,
                           keyboardType: const TextInputType.numberWithOptions(
@@ -191,27 +187,28 @@ class _SettingsPageState extends State<SettingsPage>
                         ),
                       ],
                     ),
-                  ),
                 ),
                 const SizedBox(height: 12),
-                Card(
-                  child: SwitchListTile(
+                IosCard(
+                  padding: EdgeInsets.zero,
+                  child: IosSwitchRow(
+                    title: '同时提醒「回撤 / 跌破均线」',
+                    subtitle: '回测显示这两类规则在 2016-2026 跑输「随便哪天买」，'
+                        '默认关闭以减少噪音',
                     value: settings.includeHint,
-                    title: const Text('同时提醒「回撤 / 跌破均线」'),
-                    subtitle: const Text(
-                        '回测显示这两类规则在 2016-2026 跑输「随便哪天买」，默认关闭以减少噪音'),
                     onChanged: (bool v) =>
                         _apply(settings.copyWith(includeHint: v)),
                   ),
                 ),
                 const SizedBox(height: 12),
-                Card(
+                IosCard(
+                  padding: EdgeInsets.zero,
                   child: Column(
                     children: <Widget>[
-                      ListTile(
-                        leading: const Icon(Icons.notifications_active),
-                        title: const Text('发送测试通知'),
-                        subtitle: const Text('用来当场验证通知是否真的能弹出来'),
+                      IosRow(
+                        icon: Icons.notifications_active_outlined,
+                        title: '发送测试通知',
+                        subtitle: '用来当场验证通知是否真的能弹出来',
                         onTap: () async {
                           await NotificationService.requestPermission();
                           await NotificationService.show(
@@ -221,16 +218,18 @@ class _SettingsPageState extends State<SettingsPage>
                           );
                         },
                       ),
-                      ListTile(
-                        leading: const Icon(Icons.refresh),
-                        title: const Text('立即检查一次'),
-                        subtitle: Text(_status ?? '只预览结果，不发通知'),
+                      const IosSeparator(indent: 48),
+                      IosRow(
+                        icon: Icons.refresh,
+                        title: '立即检查一次',
+                        subtitle: _status ?? '只预览结果，不发通知',
                         onTap: _busy ? null : _runCheck,
                       ),
-                      ListTile(
-                        leading: const Icon(Icons.cleaning_services),
-                        title: const Text('清除「今日已提醒」记录'),
-                        subtitle: const Text('清掉后同一规则当天可以再次提醒'),
+                      const IosSeparator(indent: 48),
+                      IosRow(
+                        icon: Icons.cleaning_services_outlined,
+                        title: '清除「今日已提醒」记录',
+                        subtitle: '清掉后同一规则当天可以再次提醒',
                         onTap: () async {
                           await AlertSettings.clearNotified();
                           if (!mounted) return;
@@ -241,55 +240,34 @@ class _SettingsPageState extends State<SettingsPage>
                   ),
                 ),
                 const SizedBox(height: 12),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Row(
-                          children: <Widget>[
-                            const Text('后台任务状态',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
-                            const Spacer(),
-                            Text(
-                              _scheduled == null
-                                  ? '未知'
-                                  : (_scheduled! ? '已排程' : '未排程'),
-                              style: TextStyle(
-                                color: _scheduled == true
-                                    ? Theme.of(context).colorScheme.primary
-                                    : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '通知权限：${_permissionGranted ? '已授权' : '未授权'}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
+                IosCard(
+                  title: '后台任务状态',
+                  trailing: Text(
+                    _scheduled == null
+                        ? '未知'
+                        : (_scheduled! ? '已排程' : '未排程'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _scheduled == true
+                          ? IosColors.gold
+                          : IosColors.secondaryLabel,
                     ),
+                  ),
+                  child: Text(
+                    '通知权限：${_permissionGranted ? '已授权' : '未授权'}',
+                    style: const TextStyle(
+                        fontSize: 13, color: IosColors.secondaryLabel),
                   ),
                 ),
                 const SizedBox(height: 12),
-                Card(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        const Text('小米 HyperOS 保活（决定提醒是否真的会响）',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 6),
-                        Text(
-                          '小米的省电策略会杀后台，导致定时提醒不触发。'
-                          '下面几个按钮直接跳到对应系统页面，比自己在设置里翻快得多。',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 10),
+                IosCard(
+                  title: '小米 HyperOS 保活',
+                  info: '省电策略会杀后台，导致定时提醒不触发。'
+                      '下面几个按钮直接跳到对应系统页面，比自己在设置里翻快得多。',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
                         Row(
                           children: <Widget>[
                             Icon(
@@ -342,7 +320,6 @@ class _SettingsPageState extends State<SettingsPage>
                         ),
                       ],
                     ),
-                  ),
                 ),
                 const SizedBox(height: 24),
               ],
