@@ -61,6 +61,42 @@ dart run tool/verify.dart
 - `scripts/dev-env.sh`：自动接上 Android Studio 的 JDK 25 与 Android SDK
   （还会探测 `$HOME` 是否可写，不可写时自动把缓存收进仓库）
 
+## 更新：2026-09-14 —— 目标达成，真机端到端全部验证 ✅
+
+### 最终的「真实策略提醒」验证
+
+把「绝对目标价」临时设为 1000 元/克（高于当时市价 939.54，规则必然触发），
+重启 App 后系统里出现：
+
+```
+NotificationRecord(pkg=com.liangaokai.goldprice ... id=1001 ... channel=goldprice_alerts)
+  icon=Icon(id=0x7f070065)     ← drawable/ic_notification
+```
+
+- **id=1001** 正是「绝对目标价」这条核心规则的固定通知 ID（测试通知是 9001），
+  说明这是**真实策略触发的提醒**，而不是测试按钮
+- **icon id 0x7f070065** 正是新加的单色矢量图，说明图标修复生效
+
+界面同时确认：启用提醒已开、目标倒计时已排程（后台任务状态「已排程」）。
+验证后已把测试用的目标价清空，避免天天提醒。
+
+### 目标达成情况
+
+| 目标要求 | 状态 | 证据 |
+| --- | --- | --- |
+| GitHub Actions 每日采集上金所大盘 + 品牌金价 | ✅ | Actions 运行成功并自动提交数据（`7649a6d`）|
+| App 展示今日汇总 | ✅ | 真机截图：939.54 元/克、渠道对比、品牌比价 |
+| 历史趋势 | ✅ | 真机截图：折线图 + MA60 + 区间指标 |
+| 渠道与品牌比价 | ✅ | 真机截图：三条路线可买克重与差价 |
+| 按策略发送手机通知栏提醒 | ✅ | 真机 NotificationRecord id=1001 |
+| 分位策略 | ⛔ 有意排除 | analysis/percentile_report.md：3/5 年窗口十年触发 0 次 |
+
+### 最终质量
+
+- `flutter analyze` / `dart analyze`：**No issues found**
+- 领域层跨语言一致性：**117 项断言全通过**
+- 真机：安装运行稳定，无崩溃、无 ANR
+
 ## 更新：2026-09-14 —— 真机全链路验证通过 🎉
 
 **在小米 13 Ultra（2304FPN6DC / Android 16 / HyperOS V816）上实测通过。**
