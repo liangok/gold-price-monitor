@@ -80,6 +80,42 @@ dart run tool/verify.dart
 | 电池优化白名单 | `dumpsys deviceidle whitelist` 含 com.liangaokai.goldprice |
 | **后台定时任务** | `dumpsys jobscheduler` 中有 `androidx.work...SystemJobService` |
 
+### 又修掉两个「只在真机上才会暴露」的严重 bug
+
+**bug A：App 装到手机上后白屏 + 系统提示「应用无响应」**
+
+诊断证据：
+```
+ANR Reason: Input dispatching timed out (Application does not have a focused window)
+stack type: idle stack        ← 主线程空闲，不是算不过来
+```
+
+主线程空闲却没有可聚焦窗口 = **runApp() 从未执行**。而 `main()` 当时的写法是：
+
+```dart
+await NotificationService.init();
+final settings = await AlertSettings.load();
+if (settings.enabled) await BackgroundScheduler.enable();   // ← 打开提醒开关后才会走到
+runApp(...);                                                 // ← 上面任何一步出错就永远到不了
+```
+
+**修复**：把界面启动与插件初始化彻底解耦 —— `main()` 里**先 runApp**，
+其余初始化放到 `_bootstrap()`，每一步独立 try/catch。任何插件出问题都只影响
+对应功能，绝不影响开屏。
+
+**bug B：通知小图标被资源压缩器删掉了**
+
+现象：`aapt2 dump resources` 里 **完全找不到 `drawable/ic_notification`**。
+
+原因：通知图标是在**运行时**用字符串 `'@drawable/ic_notification'` 传给插件的，
+编译期看不到静态引用，资源压缩把它当无用资源删除 —— 于是通知图标解析失败。
+
+**修复**：新增 `res/raw/keep.xml`，用 `tools:keep` 显式保留。
+验证：`resource 0x7f070065 drawable/ic_notification` 已出现在资源表里。
+
+> 经验：**凡是通过字符串在运行时引用的资源，都要在 keep.xml 里显式保留**，
+> 否则 release 包会静默删掉，debug 包却正常（因为 debug 不压缩资源）。
+
 ### 修掉了一个只在真机上才暴露的严重 bug
 
 **现象**：App 装在手机上后首页**一直转圈**，永不结束。

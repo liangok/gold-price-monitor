@@ -13,26 +13,50 @@ import 'ui/settings_page.dart';
 import 'ui/tools_page.dart';
 import 'ui/trend_page.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 通知插件本身要初始化；是否真的发通知由 AlertSettings.enabled 控制。
-  await NotificationService.init();
+  // ⚠️ 先启动界面，再做插件初始化 —— 这两件事必须解耦。
+  //
+  // 踩过的坑：原先在 runApp 之前 await 了通知插件与 WorkManager 的初始化，
+  // 结果只要其中任何一步抛异常或迟迟不返回，runApp 就永远执行不到，
+  // 表现为**白屏 + 系统提示「应用无响应」**（主线程其实空闲，只是在等 Future）。
+  runApp(const GoldPriceApp());
 
-  final settings = await AlertSettings.load();
-  if (settings.enabled) {
-    await BackgroundScheduler.enable();
-    // 启动时顺带检查一次。失败无所谓（周期任务会覆盖），所以吞掉异常。
-    unawaited(Future<void>(() async {
-      try {
-        await runAlertCheck(notify: true);
-      } catch (_) {
-        // 忽略：联网失败 / 仓库未就绪等都不应影响打开 App
-      }
-    }));
+  unawaited(_bootstrap());
+}
+
+/// 开屏之后的后台初始化。
+///
+/// 每一步都独立 try/catch：任何一步失败只影响对应功能，绝不影响 App 打开。
+Future<void> _bootstrap() async {
+  try {
+    // 通知插件本身要初始化；是否真的发通知由 AlertSettings.enabled 控制。
+    await NotificationService.init();
+  } catch (_) {
+    // 通知初始化失败不影响其它功能
   }
 
-  runApp(const GoldPriceApp());
+  bool enabled;
+  try {
+    enabled = (await AlertSettings.load()).enabled;
+  } catch (_) {
+    return;
+  }
+  if (!enabled) return;
+
+  try {
+    await BackgroundScheduler.enable();
+  } catch (_) {
+    // 后台排程失败不影响前台使用
+  }
+
+  try {
+    // 启动时顺带检查一次策略。周期任务也会覆盖，所以失败无所谓。
+    await runAlertCheck(notify: true);
+  } catch (_) {
+    // 联网失败 / 仓库未就绪等都不应影响打开 App
+  }
 }
 
 class GoldPriceApp extends StatelessWidget {

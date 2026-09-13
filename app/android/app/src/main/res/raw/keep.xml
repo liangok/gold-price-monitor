@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  告诉资源压缩器：不要删掉 @drawable/ic_notification。
+
+  原因：通知小图标是在**运行时**通过字符串传给通知插件的
+  （AndroidInitializationSettings('@drawable/ic_notification')），
+  编译期看不到任何静态引用，资源压缩会把它当无用资源删掉 —— 实测确实被删了，
+  结果是通知图标解析失败，甚至让 App 启动时就抛异常、直接白屏。
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification" />
