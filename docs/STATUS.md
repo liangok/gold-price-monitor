@@ -2,8 +2,13 @@
 
 ## 一句话状态
 
-数据层与分析层**已完成并验证**；App 界面代码已写完、静态分析 0 error、跨语言一致性测试 98/98 通过。
-**只剩最后一步：构建 APK 时被「NDK 安装」卡住。**
+数据层、分析层、App **全部完成并验证**：
+`flutter analyze` 与 `dart analyze` 均 **No issues found**，跨语言一致性 **98/98** 通过，
+release APK 已构建（51.2MB，含离线快照）。
+
+**剩余仅两项需要人工完成：**
+1. 创建 GitHub 仓库（否则 Actions 不跑、App 拿不到实时数据）
+2. 装到小米 13 Ultra 上验证通知真机可用
 
 ## 一、已完成并验证
 
@@ -56,6 +61,28 @@ dart run tool/verify.dart
 - `.toolhome/`：Gradle 9.3.1 与 pub 缓存约 1.8G —— **明天不用重下**
 - `scripts/dev-env.sh`：自动接上 Android Studio 的 JDK 25 与 Android SDK
   （还会探测 `$HOME` 是否可写，不可写时自动把缓存收进仓库）
+
+## 更新：2026-09-13 深夜（二）—— lint 清零 + 新增工具页 ✅
+
+### 1. lint 全部清理完毕
+
+`flutter analyze` 从 **62 条** → **No issues found**；`dart analyze`（领域层）同样干净。
+
+主要是 60 条 `prefer_interpolation_to_compose_strings`（字符串拼接 → 插值）
+与 2 条 `prefer_final_fields`。顺带修掉了过程中新引入的
+7 条 `unnecessary_brace_in_string_interps`。
+
+### 2. 新增「工具」页（底部导航第 3 项）
+
+- **一口价折算克价（防坑）**：输入总价与克重，算出真实克价，
+  并与大盘价、当日品牌首饰金均价对比，给出「严重偏贵 / 偏贵 / 略贵 / 划算」判定。
+  复用了领域层里已有测试覆盖的 `evaluateOnePrice`。
+- **预算能买多少克**：输入预算，实时显示品牌店 / 水贝 / 银行金条打金三条路线各能买多少克。
+
+### 3. 采集器回归验证
+
+隔一天重跑采集，两个数据源均正常：品牌金价与银行金条已更新到 **2026-09-13**。
+（9/12、9/13 是周六日，上金所无行情，大盘仍是 9/11 收盘的 939.54。）
 
 ## 更新：2026-09-13 深夜 —— 通知栏提醒已完成 ✅
 
@@ -129,7 +156,7 @@ APK: 51.1MB，flutter analyze 0 error / 0 warning，flutter test 通过
 
 ### 已知未做
 
-- 49 条 info 级 lint（多为字符串拼接风格，不影响运行）
+- ~~49 条 info 级 lint~~ → **已全部清零**（见下方最新更新）
 - GitHub 仓库仍未创建（见下一节）
 
 ## 更新：2026-09-13 晚 —— APK 已构建成功 ✅
