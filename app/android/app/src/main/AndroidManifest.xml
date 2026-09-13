@@ -2,6 +2,8 @@
     <!-- 必须写在 main 清单里：Flutter 模板只把 INTERNET 放在 debug / profile 清单，
          而那两个不会进入 release 包。少了这一行，正式版装到手机上会完全无法联网。 -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- 定时提醒：开机后让 WorkManager 重新排程，否则重启手机提醒会失效 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
         android:label="金价监控"

@@ -9,8 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_local_notifications: ^22.3.1
   goldprice_domain:
     path: ../packages/goldprice_domain
+  shared_preferences: ^2.5.5
+  workmanager: ^0.10.10
 
 dev_dependencies:
   flutter_test:
