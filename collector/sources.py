@@ -14,6 +14,8 @@
 """
 from __future__ import annotations
 
+import csv
+import io
 import json
 import re
 import ssl
@@ -290,7 +292,7 @@ MACRO_SERIES = (
 
 
 #: 当前使用的宏观序列键。采集端据此清理「已经停用的旧源」残留。
-MACRO_KEYS = tuple(item[0] for item in MACRO_SERIES)
+MACRO_KEYS = tuple(item[0] for item in MACRO_SERIES) + ("us2y", "us10y")
 
 
 def _sina_extract_quoted(text):
@@ -359,6 +361,57 @@ def fetch_sina_history(kind, code):
     return points
 
 
+TREASURY_CSV_URL = (
+    "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/"
+    "daily-treasury-rates.csv/{year}/all"
+    "?type=daily_treasury_yield_curve&field_tdr_date_value={year}&page&_format=csv"
+)
+
+
+def fetch_us_treasury_yields(years=None):
+    """
+    抓**美国财政部官方**的国债收益率曲线（日度，含 2 年期与 10 年期）。
+
+    为什么用它而不是别的：
+      - 官方一手数据，无需 key，GitHub Actions 上稳定可达
+      - 有完整历史（回测就是用它做的，见 analysis/yield_backtest.py）
+      - 2 年期是「美联储预期」最直接的度量：近 20 个交易日变动在回测里
+        对金价前向收益有明确、单调的信号（下行时前向 60 日 +7.53% vs 基准 +3.49%）
+    同日取**前一年 + 当年**，避免跨年时凑不满 20 日回看窗口。
+    """
+    if years is None:
+        this_year = datetime.now(CST).year
+        years = (this_year - 1, this_year)
+
+    points = []
+    errors = []
+    for year in years:
+        try:
+            body = _http_get(TREASURY_CSV_URL.format(year=year))
+        except FetchError as exc:
+            errors.append("{}: {}".format(year, exc))
+            continue
+        for row in csv.DictReader(io.StringIO(body)):
+            raw = row.get("Date")
+            if not raw:
+                continue
+            try:
+                month, day, year_part = raw.split("/")
+                points.append({
+                    "date": "{}-{:02d}-{:02d}".format(
+                        year_part, int(month), int(day)),
+                    "y2": float(row["2 Yr"]),
+                    "y10": float(row["10 Yr"]),
+                })
+            except (ValueError, KeyError):
+                continue
+
+    if len(points) < 2:
+        raise FetchError("财政部收益率曲线为空：" + " | ".join(errors))
+    points.sort(key=lambda p: p["date"])
+    return points
+
+
 def fetch_macro():
     """
     抓取宏观因子：实时值 + 日线历史。
@@ -395,6 +448,23 @@ def fetch_macro():
             "points": points,
         }
         time.sleep(1.2)  # 对新浪也保持礼貌
+
+    try:
+        ust = fetch_us_treasury_yields()
+        series["us2y"] = {
+            "name": "美债2年",
+            "date": ust[-1]["date"],
+            "value": ust[-1]["y2"],
+            "points": [{"date": p["date"], "close": p["y2"]} for p in ust],
+        }
+        series["us10y"] = {
+            "name": "美债10年",
+            "date": ust[-1]["date"],
+            "value": ust[-1]["y10"],
+            "points": [{"date": p["date"], "close": p["y10"]} for p in ust],
+        }
+    except FetchError as exc:
+        errors.append("us_treasury: {}".format(exc))
 
     if not series:
         raise FetchError("全部宏观序列都抓取失败：" + " | ".join(errors))

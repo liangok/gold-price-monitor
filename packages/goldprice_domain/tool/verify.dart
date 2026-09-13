@@ -282,11 +282,23 @@ void main() {
           name: '美元指数', date: '2026-09-11', value: 98.9664, chg20Pct: -0.0033),
       'usdcny': MacroSeries(
           name: '离岸人民币', date: '2026-09-11', value: 6.6959, chg20Pct: -0.0046),
+      // 美债 2 年期近 20 日 +46bp（加息预期升温）→ 回测判定为逆风
+      'us2y': MacroSeries(
+          // 单位是百分点：0.46 点 = 46bp
+          name: '美债2年', date: '2026-09-11', value: 4.63, chg20Abs: 0.46),
     },
   );
 
   final double? intlCny = internationalGoldInCny(macro);
   checkNum('国际金价换算', intlCny, 4348.35 * 6.6959 / 31.1034768, 1e-6);
+
+  /// 按名字取因子（不按下标，避免因子增删导致测试脆断）。
+  BuyFactor factorOf(BuyAssessment a, String prefix) {
+    for (final BuyFactor f in a.factors) {
+      if (f.name.startsWith(prefix)) return f;
+    }
+    return const BuyFactor(name: '', valueText: '', score: 0, reason: '');
+  }
 
   final BuyAssessment base = assessBuyPoint(
     macro: macro,
@@ -295,35 +307,43 @@ void main() {
     changePct: -0.0141,
     drawdown: -0.0896,
   );
-  checkNum('基准场景总分', base.total, 1);
-  checkBool('基准场景结论为略偏顺风', base.verdict == '略偏顺风', true);
-  checkNum('依据条数（含回撤占位）', base.factors.length, 5);
+  checkNum('美债2年 +46bp 计 -2', factorOf(base, '美债2年期').score, -2);
+  checkNum('基准场景总分', base.total, -2);
+  checkBool('基准场景结论为略偏逆风', base.verdict == '略偏逆风', true);
+  checkNum('计分项只有 2 个', base.scoredCount, 2);
 
-  // 国内大幅溢价 → 负面
-  final BuyAssessment rich = assessBuyPoint(
-    macro: macro,
-    benchmarkClose: 985.0,
+  // 收益率下行（降息预期）→ 正面
+  const MacroSnapshot easing = MacroSnapshot(
+    updatedAt: '',
+    series: <String, MacroSeries>{
+      'us2y': MacroSeries(
+          name: '美债2年', date: '2026-09-11', value: 4.2, chg20Abs: -0.30),
+    },
+  );
+  final BuyAssessment easy = assessBuyPoint(
+    macro: easing,
+    benchmarkClose: 939.54,
     rsi: 45.4,
     changePct: -0.0141,
   );
-  checkBool('国内大幅溢价时更差', rich.total < base.total, true);
+  checkNum('美债2年 -30bp 计 +2', factorOf(easy, '美债2年期').score, 2);
+  checkNum('降息预期下总分为正', easy.total, 2);
 
-  // 稀有恐慌信号 → 正面
+  // 稀有恐慌信号 → 正面，且能把逆风翻转
   final BuyAssessment panic = assessBuyPoint(
     macro: macro,
     benchmarkClose: 939.54,
     rsi: 24.0,
     changePct: -0.031,
   );
-  checkBool('恐慌信号提升总分', panic.total > base.total, true);
-  checkNum('恐慌信号加满 4 分', panic.factors[3].score, 4);
+  checkNum('恐慌信号加满 4 分', factorOf(panic, '恐慌信号').score, 4);
+  checkBool('恐慌信号能把逆风翻转', panic.total > base.total, true);
 
-  // 回撤不加分
-  int drawdownScore = 0;
-  for (final BuyFactor f in base.factors) {
-    if (f.name == '距90日高点') drawdownScore = f.score;
-  }
-  checkNum('回撤因子不计分', drawdownScore, 0);
+  // 未通过回测的因子必须是**展示项**（scored == false）
+  checkBool('国内金料价差为展示项', !factorOf(base, '国内金料价差').scored, true);
+  checkBool('美元指数为展示项', !factorOf(base, '美元指数').scored, true);
+  checkBool('回撤为展示项', !factorOf(base, '距90日高点').scored, true);
+  checkNum('展示项即使数值极端也不影响总分', factorOf(base, '国内金料价差').score, 0);
 
   // 缺少宏观数据也不能崩
   final BuyAssessment noMacro = assessBuyPoint(

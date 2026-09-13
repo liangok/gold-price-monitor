@@ -63,6 +63,16 @@ def save_json(path, obj):
     print("[ok] 写入 {}".format(os.path.relpath(path, ROOT)))
 
 
+def abs_change(points, n):
+    """近 n 个点的**绝对**变动。收益率要用 bp（百分点 × 100），不是百分比。"""
+    if len(points) < 2:
+        return None
+    base = points[max(0, len(points) - n)]["close"]
+    if base is None:
+        return None
+    return round(points[-1]["close"] - base, 4)
+
+
 def pct_change(points, n):
     """近 n 个点的涨跌幅（n 从末尾往前数）。"""
     if len(points) < 2:
@@ -217,6 +227,7 @@ def main():
                 "value": rec["value"],
                 "chg20_pct": pct_change(points, 20),
                 "chg30_pct": pct_change(points, 30),
+                "chg20_abs": abs_change(points, 20),
                 "history_points": len(points),
             }
         # 合并是为了保留旧值，但已停用的源要清掉

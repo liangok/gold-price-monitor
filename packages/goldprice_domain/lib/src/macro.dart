@@ -1,12 +1,18 @@
 /// 宏观因子与「买点评估」。
 ///
 /// 设计原则（重要）：
-///   1. **纯数值、无 AI、无黑箱。** 每条依据都展示原始值、判断阈值与得分。
+///   1. **只给回测支持的东西打分。** 每个计分因子的符号与阈值都来自
+///      analysis/factor_backtest.py 的实测结果，不靠直觉。
 ///   2. **不预测。** 没有任何模型能可靠预测短期金价。这里做的是把
-///      「现在贵不贵 / 顺风还是逆风」量化，帮用户决定**节奏**（要不要分批），
+///      「现在买入历史上是否相对有利」量化，帮用户决定**节奏**（要不要分批），
 ///      而不是替他决定「买还是不买」。
-///   3. **只给回测支持的东西加分。** 回撤、均线在 2016-2026 都跑输基准，
-///      因此不参与得分，只作为提示展示。
+///   3. **没通过验证的因子降级为展示。** 展示项得分为 0，但仍列出原始值，
+///      因为「国内比国际贵多少」这类信息本身对决策有用（是成本，不是信号）。
+///
+/// 回测结论（前向 60 个交易日，基准「随便哪天买」+3.49%）：
+///   - 美债 2 年期近 20 日👇 大幅下行 +7.53%（+4.04pp）｜上行 −1.22pp → **单调、可用**
+///   - 美元指数    走强 +1.07pp 但大幅走强 −0.55pp → **非单调，判为噪音**
+///   - 国内金料价差 20 日支持、60 日反转 → **方向不一致，不可用**
 library;
 
 import 'dart:convert';
@@ -18,7 +24,13 @@ class MacroSeries {
   final String name;
   final String date;
   final double value;
+
+  /// 近 20 个交易日的百分比变动（汇率、指数类用它）
   final double? chg20Pct;
+
+  /// 近 20 个交易日的**绝对**变动（收益率类用它，单位是百分点，×100 得 bp）
+  final double? chg20Abs;
+
   final double? chg30Pct;
 
   const MacroSeries({
@@ -26,8 +38,12 @@ class MacroSeries {
     required this.date,
     required this.value,
     this.chg20Pct,
+    this.chg20Abs,
     this.chg30Pct,
   });
+
+  /// 近 20 日变动换算成基点（bp）。
+  double? get chg20Bp => chg20Abs == null ? null : chg20Abs! * 100;
 
   factory MacroSeries.fromJson(Map<String, dynamic> json) {
     return MacroSeries(
@@ -35,6 +51,7 @@ class MacroSeries {
       date: json['date'] as String? ?? '',
       value: (json['value'] as num?)?.toDouble() ?? 0,
       chg20Pct: (json['chg20_pct'] as num?)?.toDouble(),
+      chg20Abs: (json['chg20_abs'] as num?)?.toDouble(),
       chg30Pct: (json['chg30_pct'] as num?)?.toDouble(),
     );
   }
@@ -50,6 +67,8 @@ class MacroSnapshot {
   MacroSeries? get goldSpot => series['gold_spot'];
   MacroSeries? get dxy => series['dxy'];
   MacroSeries? get usdcny => series['usdcny'];
+  MacroSeries? get us2y => series['us2y'];
+  MacroSeries? get us10y => series['us10y'];
 
   factory MacroSnapshot.fromJson(Map<String, dynamic> json) {
     final Object? raw = json['series'];
@@ -74,18 +93,23 @@ class MacroSnapshot {
   }
 }
 
-/// 一条判断依据。分数为正表示「对买家更有利」。
+/// 一条判断依据。
+///
+/// [score] 为正表示「**现在买入**历史上相对更有利」。
+/// [scored] 为 false 表示该项只展示、不计分（未通过回测）。
 class BuyFactor {
   final String name;
   final String valueText;
   final int score;
   final String reason;
+  final bool scored;
 
   const BuyFactor({
     required this.name,
     required this.valueText,
     required this.score,
     required this.reason,
+    this.scored = true,
   });
 }
 
@@ -100,13 +124,16 @@ class BuyAssessment {
     required this.advice,
   });
 
+  /// 只累加**计分项**。
   int get total {
     int sum = 0;
     for (final BuyFactor f in factors) {
-      sum += f.score;
+      if (f.scored) sum += f.score;
     }
     return sum;
   }
+
+  int get scoredCount => factors.where((BuyFactor f) => f.scored).length;
 }
 
 /// 国际金价（伦敦金现）换算成人民币元/克。
@@ -119,8 +146,6 @@ double? internationalGoldInCny(MacroSnapshot? macro) {
 }
 
 /// 评估当前买点。
-///
-/// [benchmarkClose] 上海金 Au99.99（元/克）；其余为技术指标。
 BuyAssessment assessBuyPoint({
   required MacroSnapshot? macro,
   required double benchmarkClose,
@@ -130,97 +155,41 @@ BuyAssessment assessBuyPoint({
 }) {
   final List<BuyFactor> factors = <BuyFactor>[];
 
-  // ── 1. 国内金料价差：最贴近「现在买国内金，相对国际贵了多少」
-  final double? intlCny = internationalGoldInCny(macro);
-  if (intlCny != null && intlCny > 0) {
-    final double diff = benchmarkClose - intlCny;
+  // ══════════════════════════════════════════════════════════════════
+  // 计分因子（有回测支持）
+  // ══════════════════════════════════════════════════════════════════
+
+  // ── 1. 美债 2 年期近 20 日变动：唯一有明确、单调信号的宏观因子。
+  //      收益率下行（降息预期）→ 金价前向收益显著高于基准。
+  final double? y2Bp = macro?.us2y?.chg20Bp;
+  if (y2Bp != null) {
     int score;
     String reason;
-    if (diff > 12) {
-      score = -2;
-      reason = '国内明显贵于国际，追高风险偏大';
-    } else if (diff > 4) {
-      score = -1;
-      reason = '国内略贵于国际';
-    } else if (diff >= -4) {
-      score = 0;
-      reason = '内外盘价格基本持平';
-    } else if (diff >= -12) {
-      score = 1;
-      reason = '国内略低于国际，相对划算';
-    } else {
+    if (y2Bp < -25) {
       score = 2;
-      reason = '国内明显低于国际';
+      reason = '降息预期升温。回测中这种状态下金价前向 60 日 +7.53%（基准 +3.49%）';
+    } else if (y2Bp < -8) {
+      score = 1;
+      reason = '收益率小幅下行，回测中略优于基准';
+    } else if (y2Bp <= 8) {
+      score = 0;
+      reason = '收益率基本走平，回测中略差于基准但差异不大';
+    } else if (y2Bp <= 25) {
+      score = -1;
+      reason = '加息预期升温，回测中前向收益低于基准';
+    } else {
+      score = -2;
+      reason = '加息预期明显升温。回测中这种状态下金价前向 60 日仅 +2.79%（基准 +3.49%）';
     }
     factors.add(BuyFactor(
-      name: '国内金料价差',
-      valueText: (diff >= 0 ? '+' : '') + diff.toStringAsFixed(1) + ' 元/克',
+      name: '美债2年期（近20日）',
+      valueText: (y2Bp >= 0 ? '+' : '') + y2Bp.toStringAsFixed(0) + 'bp',
       score: score,
       reason: reason,
     ));
   }
 
-  // ── 2. 美元指数近 20 日：美元走强通常压制金价，对买家有利
-  final double? dxyChg = macro?.dxy?.chg20Pct;
-  if (dxyChg != null) {
-    int score;
-    String reason;
-    if (dxyChg > 0.02) {
-      score = 2;
-      reason = '美元明显走强，历史上压制金价';
-    } else if (dxyChg > 0.005) {
-      score = 1;
-      reason = '美元小幅走强';
-    } else if (dxyChg >= -0.005) {
-      score = 0;
-      reason = '美元基本走平';
-    } else if (dxyChg >= -0.02) {
-      score = -1;
-      reason = '美元小幅走弱，对金价偏支撑';
-    } else {
-      score = -2;
-      reason = '美元明显走弱，金价易涨';
-    }
-    factors.add(BuyFactor(
-      name: '美元指数（近20日）',
-      valueText:
-          (dxyChg >= 0 ? '+' : '') + (dxyChg * 100).toStringAsFixed(2) + '%',
-      score: score,
-      reason: reason,
-    ));
-  }
-
-  // ── 3. 人民币近 20 日：人民币升值会让国内金价被动下降
-  final double? fxChg = macro?.usdcny?.chg20Pct;
-  if (fxChg != null) {
-    int score;
-    String reason;
-    if (fxChg < -0.01) {
-      score = 2;
-      reason = '人民币明显升值，国内金价被动走低';
-    } else if (fxChg < -0.003) {
-      score = 1;
-      reason = '人民币小幅升值';
-    } else if (fxChg <= 0.003) {
-      score = 0;
-      reason = '汇率基本稳定';
-    } else if (fxChg <= 0.01) {
-      score = -1;
-      reason = '人民币小幅贬值，推高国内金价';
-    } else {
-      score = -2;
-      reason = '人民币明显贬值，国内金价被动上涨';
-    }
-    factors.add(BuyFactor(
-      name: '人民币汇率（近20日）',
-      valueText:
-          (fxChg >= 0 ? '+' : '') + (fxChg * 100).toStringAsFixed(2) + '%',
-      score: score,
-      reason: reason,
-    ));
-  }
-
-  // ── 4. 稀有恐慌信号：回测里**唯一**跑赢基准的两类
+  // ── 2. 稀有恐慌信号：回测里另一类跑赢基准的情形
   int panicScore = 0;
   final List<String> panicNotes = <String>[];
   if (rsi != null && rsi < 30) {
@@ -240,34 +209,89 @@ BuyAssessment assessBuyPoint({
         : '历史上这两类信号出现后 20 日收益跑赢基准',
   ));
 
-  // ── 5. 回撤：只展示、不加分（回测跑输基准）
+  // ══════════════════════════════════════════════════════════════════
+  // 展示项（未通过回测，只给信息、不计分）
+  // ══════════════════════════════════════════════════════════════════
+
+  // ── 国内金料价差：是**成本**不是信号
+  final double? intlCny = internationalGoldInCny(macro);
+  if (intlCny != null && intlCny > 0) {
+    final double diff = benchmarkClose - intlCny;
+    factors.add(BuyFactor(
+      name: '国内金料价差',
+      valueText: (diff >= 0 ? '+' : '') + diff.toStringAsFixed(1) + ' 元/克',
+      score: 0,
+      scored: false,
+      reason: diff >= 0
+          ? '你现在为每克多付 ' +
+              diff.toStringAsFixed(1) +
+              ' 元（成本，非择时信号）'
+          : '你现在比国际价每克少付 ' +
+              (-diff).toStringAsFixed(1) +
+              ' 元（成本，非择时信号）',
+    ));
+  }
+
+  // ── 美元指数：回测非单调，判为噪音
+  final double? dxyChg = macro?.dxy?.chg20Pct;
+  if (dxyChg != null) {
+    factors.add(BuyFactor(
+      name: '美元指数（近20日）',
+      valueText:
+          (dxyChg >= 0 ? '+' : '') + (dxyChg * 100).toStringAsFixed(2) + '%',
+      score: 0,
+      scored: false,
+      reason: '回测中信号非单调（走强 +1.07pp、大幅走强 −0.55pp），判为噪音，不计分',
+    ));
+  }
+
+  // ── 人民币汇率：同样未通过验证
+  final double? fxChg = macro?.usdcny?.chg20Pct;
+  if (fxChg != null) {
+    factors.add(BuyFactor(
+      name: '人民币汇率（近20日）',
+      valueText:
+          (fxChg >= 0 ? '+' : '') + (fxChg * 100).toStringAsFixed(2) + '%',
+      score: 0,
+      scored: false,
+      reason: '未单独验证，仅作背景（它主要通过换算影响国内金价）',
+    ));
+  }
+
+  // ── 距 90 日高点：回撤类规则在回测中跑输基准
   if (drawdown != null) {
     factors.add(BuyFactor(
       name: '距90日高点',
       valueText: (drawdown * 100).toStringAsFixed(2) + '%',
       score: 0,
-      reason: '仅记录：回撤类规则在回测中跑输「随便哪天买」，不计入得分',
+      scored: false,
+      reason: '仅记录：回撤类规则在回测中跑输「随便哪天买」，不计分',
     ));
   }
 
-  final int total = factors.fold<int>(0, (int a, BuyFactor f) => a + f.score);
+  final int total = factors
+      .where((BuyFactor f) => f.scored)
+      .fold<int>(0, (int a, BuyFactor f) => a + f.score);
+
   String verdict;
   String advice;
   if (total >= 4) {
     verdict = '偏顺风';
-    advice = '几个因子都偏向买家。可按计划推进，但仍建议分批 —— 遇到议息、CPI 这类事件日波动会明显放大。';
+    advice = '计分因子明显偏向买家。可按计划推进，但仍建议分批 —— 事件日波动会放大。';
   } else if (total >= 1) {
     verdict = '略偏顺风';
-    advice = '整体略偏有利。按原计划分批买入即可，不必刻意等待。';
+    advice = '计分因子略偏有利。按原计划分批买入即可，不必刻意等待。';
   } else if (total == 0) {
     verdict = '中性';
-    advice = '没有明显信号。这种时候「等」和「买」的期望差别不大，按婚期节奏走就好。';
+    advice = '没有明显信号。这种时候「等」和「买」的历史期望差别不大，按婚期节奏走就好。';
   } else if (total >= -3) {
     verdict = '略偏逆风';
-    advice = '短期偏贵或逆风。婚期还早可以放慢节奏；婚期临近则时间约束优先，别为了等而耽误事。';
+    advice = '短期偏逆风（通常是加息预期升温）。婚期还早可以放慢节奏、多分几批；'
+        '婚期临近则时间约束优先，别为了等而耽误事。';
   } else {
     verdict = '偏逆风';
-    advice = '多个因子偏贵。若时间允许可放缓；但记住真正省钱的是渠道（水贝/金条打金），不是等价格。';
+    advice = '计分因子明显偏逆风。若时间允许可放缓节奏；但记住真正省钱的是渠道'
+        '（水贝 / 金条打金），不是等价格。';
   }
 
   return BuyAssessment(factors: factors, verdict: verdict, advice: advice);
