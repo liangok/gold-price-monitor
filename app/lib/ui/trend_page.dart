@@ -92,6 +92,7 @@ class _TrendPageState extends State<TrendPage> {
                               .toList(),
                           lineColor: Theme.of(context).colorScheme.primary,
                           averageLine: ma60,
+                          unit: '元/克',
                         ),
                       ),
                       const SizedBox(height: 6),
