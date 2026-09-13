@@ -95,12 +95,12 @@ class AlertSettings {
   /// 同一条规则在同一天只提醒一次，避免后台任务反复打扰。
   static Future<String?> lastNotified(String ruleKey) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('notified_' + ruleKey);
+    return prefs.getString('notified_$ruleKey');
   }
 
   static Future<void> markNotified(String ruleKey, String date) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('notified_' + ruleKey, date);
+    await prefs.setString('notified_$ruleKey', date);
   }
 
   static Future<void> clearNotified() async {

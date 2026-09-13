@@ -43,7 +43,7 @@ class GoldRepository {
         final response =
             await request.close().timeout(const Duration(seconds: 15));
         if (response.statusCode != 200) {
-          lastError = 'HTTP ' + response.statusCode.toString();
+          lastError = 'HTTP ${response.statusCode}';
           continue;
         }
         final text = await response.transform(utf8.decoder).join();
@@ -71,7 +71,7 @@ class GoldRepository {
     if (cached != null) {
       return cached;
     }
-    throw StateError('拉取 ' + key + ' 失败：' + lastError.toString());
+    throw StateError('拉取 $key 失败：$lastError');
   }
 
   Future<LatestSnapshot> loadLatest() {

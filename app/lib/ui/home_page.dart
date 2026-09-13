@@ -167,9 +167,7 @@ class _HomePageState extends State<HomePage> {
                 const Spacer(),
                 if (changePct != null)
                   Text(
-                    (up ? '+' : '') +
-                        (changePct * 100).toStringAsFixed(2) +
-                        '%',
+                    '${up ? '+' : ''}${(changePct * 100).toStringAsFixed(2)}%',
                     style: TextStyle(
                         color: color, fontWeight: FontWeight.bold, fontSize: 16),
                   ),
@@ -177,12 +175,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 4),
             Text(
-              '开 ' +
-                  _money(b.open) +
-                  '   高 ' +
-                  _money(b.high) +
-                  '   低 ' +
-                  _money(b.low),
+              '开 ${_money(b.open)}   高 ${_money(b.high)}   低 ${_money(b.low)}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -217,11 +210,7 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(width: 8),
-                Text('预算 ' +
-                    data.channelConfig.budgetCny.toStringAsFixed(0) +
-                    ' 元 / 目标 ' +
-                    target.toStringAsFixed(0) +
-                    ' 克'),
+                Text('预算 ${data.channelConfig.budgetCny.toStringAsFixed(0)} 元 / 目标 ${target.toStringAsFixed(0)} 克'),
               ],
             ),
             const SizedBox(height: 4),
@@ -250,12 +239,12 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),
-                    Text(_money(q.costPerGram) + ' 元/克'),
+                    Text('${_money(q.costPerGram)} 元/克'),
                     const SizedBox(width: 12),
                     SizedBox(
                       width: 62,
                       child: Text(
-                        _grams(q.gramsForBudget) + ' 克',
+                        '${_grams(q.gramsForBudget)} 克',
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           color: q.isBest ? scheme.primary : null,
@@ -270,30 +259,14 @@ class _HomePageState extends State<HomePage> {
             }),
             const Divider(height: 20),
             Text(
-              '买 ' +
-                  target.toStringAsFixed(0) +
-                  ' 克：' +
-                  cmp.worst.name +
-                  ' 需 ' +
-                  cmp.worst.totalForTarget.toStringAsFixed(0) +
-                  ' 元，' +
-                  cmp.best.name +
-                  ' 需 ' +
-                  cmp.best.totalForTarget.toStringAsFixed(0) +
-                  ' 元，省 ' +
-                  cmp.savings.toStringAsFixed(0) +
-                  ' 元（' +
-                  (cmp.savingsPct * 100).toStringAsFixed(0) +
-                  '%）',
+              '买 ${target.toStringAsFixed(0)} 克：${cmp.worst.name} 需 ${cmp.worst.totalForTarget.toStringAsFixed(0)} 元，${cmp.best.name} 需 ${cmp.best.totalForTarget.toStringAsFixed(0)} 元，省 ${cmp.savings.toStringAsFixed(0)} 元（${(cmp.savingsPct * 100).toStringAsFixed(0)}%）',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             if (data.snapshot.cheapestBankBarPrice != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  '银行金条+打金：实时最低银行金条 ' +
-                      _money(data.snapshot.cheapestBankBarPrice!) +
-                      ' 元/克',
+                  '银行金条+打金：实时最低银行金条 ${_money(data.snapshot.cheapestBankBarPrice!)} 元/克',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -388,17 +361,7 @@ class _HomePageState extends State<HomePage> {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  '最低 ' +
-                      stats.min!.name +
-                      ' ' +
-                      stats.min!.price.toStringAsFixed(0) +
-                      '  |  最高 ' +
-                      stats.max!.name +
-                      ' ' +
-                      stats.max!.price.toStringAsFixed(0) +
-                      '  |  价差 ' +
-                      stats.spread!.toStringAsFixed(0) +
-                      ' 元/克',
+                  '最低 ${stats.min!.name} ${stats.min!.price.toStringAsFixed(0)}  |  最高 ${stats.max!.name} ${stats.max!.price.toStringAsFixed(0)}  |  价差 ${stats.spread!.toStringAsFixed(0)} 元/克',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -419,13 +382,13 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     if (b.bar != null)
-                      Text('金条 ' + b.bar!.toStringAsFixed(0),
+                      Text('金条 ${b.bar!.toStringAsFixed(0)}',
                           style: Theme.of(context).textTheme.bodySmall),
                     const SizedBox(width: 12),
                     SizedBox(
                       width: 64,
                       child: Text(
-                        b.gold!.toStringAsFixed(0) + ' 元',
+                        '${b.gold!.toStringAsFixed(0)} 元',
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           color: isMin

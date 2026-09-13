@@ -25,7 +25,7 @@ class ToolsPage extends StatefulWidget {
 }
 
 class _ToolsPageState extends State<ToolsPage> {
-  late Future<ToolsData> _future = _load();
+  late final Future<ToolsData> _future = _load();
 
   final TextEditingController _totalPrice = TextEditingController();
   final TextEditingController _grams = TextEditingController();
@@ -67,7 +67,7 @@ class _ToolsPageState extends State<ToolsPage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError || !snap.hasData) {
-            return Center(child: Text('加载失败：' + snap.error.toString()));
+            return Center(child: Text('加载失败：${snap.error}'));
           }
           final data = snap.data!;
           return ListView(
@@ -178,16 +178,11 @@ class _ToolsPageState extends State<ToolsPage> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text('大盘 ' + benchmark.toStringAsFixed(2) + ' 元/克'),
+                  Text('大盘 ${benchmark.toStringAsFixed(2)} 元/克'),
                   if (reference != null)
-                    Text('当日品牌首饰金均价 ' +
-                        reference.toStringAsFixed(2) +
-                        ' 元/克'),
+                    Text('当日品牌首饰金均价 ${reference.toStringAsFixed(2)} 元/克'),
                   if (result.premiumVsReferencePct != null)
-                    Text('比首饰金均价高 ' +
-                        (result.premiumVsReferencePct! * 100)
-                            .toStringAsFixed(1) +
-                        '%'),
+                    Text('比首饰金均价高 ${(result.premiumVsReferencePct! * 100).toStringAsFixed(1)}%'),
                   const SizedBox(height: 8),
                   Container(
                     width: double.infinity,
@@ -279,13 +274,13 @@ class _ToolsPageState extends State<ToolsPage> {
                         ),
                       ),
                     ),
-                    Text(q.costPerGram.toStringAsFixed(0) + ' 元/克',
+                    Text('${q.costPerGram.toStringAsFixed(0)} 元/克',
                         style: Theme.of(context).textTheme.bodySmall),
                     const SizedBox(width: 10),
                     SizedBox(
                       width: 66,
                       child: Text(
-                        q.gramsForBudget.toStringAsFixed(1) + ' 克',
+                        '${q.gramsForBudget.toStringAsFixed(1)} 克',
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           fontWeight:
@@ -302,20 +297,7 @@ class _ToolsPageState extends State<ToolsPage> {
             }),
             const Divider(height: 22),
             Text(
-              '同样 ' +
-                  budget.toStringAsFixed(0) +
-                  ' 元，' +
-                  cmp.best.name +
-                  ' 能买 ' +
-                  cmp.best.gramsForBudget.toStringAsFixed(1) +
-                  ' 克，' +
-                  cmp.worst.name +
-                  ' 只能买 ' +
-                  cmp.worst.gramsForBudget.toStringAsFixed(1) +
-                  ' 克，相差 ' +
-                  (cmp.best.gramsForBudget - cmp.worst.gramsForBudget)
-                      .toStringAsFixed(1) +
-                  ' 克。',
+              '同样 ${budget.toStringAsFixed(0)} 元，${cmp.best.name} 能买 ${cmp.best.gramsForBudget.toStringAsFixed(1)} 克，${cmp.worst.name} 只能买 ${cmp.worst.gramsForBudget.toStringAsFixed(1)} 克，相差 ${(cmp.best.gramsForBudget - cmp.worst.gramsForBudget).toStringAsFixed(1)} 克。',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),

@@ -14,7 +14,7 @@ class TrendPage extends StatefulWidget {
 }
 
 class _TrendPageState extends State<TrendPage> {
-  late Future<BenchmarkHistory> _future =
+  late final Future<BenchmarkHistory> _future =
       widget.repository.loadBenchmarkHistory();
   int _rangeDays = 365;
 
@@ -38,7 +38,7 @@ class _TrendPageState extends State<TrendPage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError || !snap.hasData) {
-            return Center(child: Text('加载失败：' + snap.error.toString()));
+            return Center(child: Text('加载失败：${snap.error}'));
           }
           final history = snap.data!;
           final total = history.records.length;
@@ -79,12 +79,7 @@ class _TrendPageState extends State<TrendPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        records.first.date +
-                            '  ~  ' +
-                            records.last.date +
-                            '   （' +
-                            take.toString() +
-                            ' 个交易日）',
+                        '${records.first.date}  ~  ${records.last.date}   （$take 个交易日）',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                       const SizedBox(height: 8),
@@ -120,17 +115,13 @@ class _TrendPageState extends State<TrendPage> {
                               fontWeight: FontWeight.bold, fontSize: 16)),
                       const SizedBox(height: 10),
                       _metric(context, '最新收盘',
-                          closes.last.toStringAsFixed(2) + ' 元/克'),
+                          '${closes.last.toStringAsFixed(2)} 元/克'),
                       _metric(context, '区间涨跌',
-                          (changePct >= 0 ? '+' : '') +
-                              (changePct * 100).toStringAsFixed(2) +
-                              '%'),
+                          '${changePct >= 0 ? '+' : ''}${(changePct * 100).toStringAsFixed(2)}%'),
                       _metric(context, '区间最低 / 最高',
-                          minValue.toStringAsFixed(2) +
-                              ' / ' +
-                              maxValue.toStringAsFixed(2)),
+                          '${minValue.toStringAsFixed(2)} / ${maxValue.toStringAsFixed(2)}'),
                       _metric(context, '距区间高点',
-                          (drawdown * 100).toStringAsFixed(2) + '%'),
+                          '${(drawdown * 100).toStringAsFixed(2)}%'),
                       _metric(context, 'MA20',
                           ma20 == null ? 'n/a' : ma20.toStringAsFixed(2)),
                       _metric(context, 'MA60',

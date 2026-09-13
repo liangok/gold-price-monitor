@@ -54,7 +54,7 @@ Future<String> _fetchText(List<String> urls) async {
         final response =
             await request.close().timeout(const Duration(seconds: 20));
         if (response.statusCode != 200) {
-          lastError = 'HTTP ' + response.statusCode.toString();
+          lastError = 'HTTP ${response.statusCode}';
           continue;
         }
         return await response.transform(utf8.decoder).join();
@@ -65,7 +65,7 @@ Future<String> _fetchText(List<String> urls) async {
   } finally {
     client.close(force: true);
   }
-  throw StateError('拉取行情失败：' + lastError.toString());
+  throw StateError('拉取行情失败：$lastError');
 }
 
 /// 拉取行情 → 判定策略 →（可选）发通知。
@@ -88,7 +88,7 @@ Future<AlertCheckResult> runAlertCheck({required bool notify}) async {
     final ageHours = DateTime.now().difference(generatedAt).inHours;
     if (ageHours > 72) {
       return AlertCheckResult.skipped(
-          '数据已 ' + ageHours.toString() + ' 小时未更新，跳过提醒');
+          '数据已 $ageHours 小时未更新，跳过提醒');
     }
   }
 
@@ -114,11 +114,8 @@ Future<AlertCheckResult> runAlertCheck({required bool notify}) async {
       if (last == today) continue; // 同一规则同一天只提醒一次
       await NotificationService.show(
         id: kNotificationIds[alert.key] ?? 1099,
-        title: '金价提醒 · ' + alert.name,
-        body: alert.detail +
-            '　大盘 ' +
-            snapshot.close.toStringAsFixed(2) +
-            ' 元/克',
+        title: '金价提醒 · ${alert.name}',
+        body: '${alert.detail}　大盘 ${snapshot.close.toStringAsFixed(2)} 元/克',
       );
       await AlertSettings.markNotified(alert.key, today);
     }

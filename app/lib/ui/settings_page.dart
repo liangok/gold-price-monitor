@@ -73,20 +73,18 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       final result = await runAlertCheck(notify: false);
       if (!mounted) return;
+      final String reason = result.skipReason ?? '';
+      final String dateText = result.dataDate ?? '?';
+      final String closeText = result.close?.toStringAsFixed(2) ?? '?';
+      final String triggeredText = result.triggeredCount.toString();
       setState(() {
         _status = result.skipped
-            ? ('已跳过：' + (result.skipReason ?? ''))
-            : ('数据日期 ' +
-                (result.dataDate ?? '?') +
-                '　大盘 ' +
-                (result.close?.toStringAsFixed(2) ?? '?') +
-                ' 元/克　触发 ' +
-                result.triggeredCount.toString() +
-                ' 条');
+            ? '已跳过：$reason'
+            : '数据日期 $dateText　大盘 $closeText 元/克　触发 $triggeredText 条';
       });
     } catch (error) {
       if (!mounted) return;
-      setState(() => _status = '检查失败：' + error.toString());
+      setState(() => _status = '检查失败：$error');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -253,7 +251,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '通知权限：' + (_permissionGranted ? '已授权' : '未授权'),
+                          '通知权限：${_permissionGranted ? '已授权' : '未授权'}',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
