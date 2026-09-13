@@ -62,6 +62,33 @@ dart run tool/verify.dart
 - `scripts/dev-env.sh`：自动接上 Android Studio 的 JDK 25 与 Android SDK
   （还会探测 `$HOME` 是否可写，不可写时自动把缓存收进仓库）
 
+## 更新：2026-09-13 深夜（三）—— 自定义应用图标 ✅
+
+之前 App 用的是 **Flutter 默认 logo**，装到手机上很像「半成品」。这轮换成自绘图标。
+
+### 做法
+
+`scripts/gen_icon.py` —— **不依赖任何第三方库**（本机没有 Pillow）：
+手写 PNG 编码器（zlib + IHDR/IDAT/IEND），在 1024×1024 上绘制硬边图形，
+再用 macOS 自带 `sips` 缩到各密度（放大→缩小天然抗锯齿）。
+
+设计：深色渐变底 + 金色上行折线 + 末端高亮点，一眼能看出「金价走势」。
+
+### 产出
+
+- 传统图标 `mipmap-*/ic_launcher.png`：48 / 72 / 96 / 144 / 192 px
+- **自适应图标**前景 `mipmap-*/ic_launcher_foreground.png`：108 / 162 / 216 / 324 / 432 px
+- `mipmap-anydpi-v26/ic_launcher{,_round}.xml`（现代 Android 用这个，会自动裁切/遮罩）
+- `values/colors.xml`（自适应背景色 #10131A）
+
+### 验证
+
+```
+aapt2 dump badging → application: label='金价监控' icon='res/BW.xml'   ← 已指向自适应图标
+aapt2 dump resources → mipmap/ic_launcher 与 mipmap/ic_launcher_foreground
+                       各 5 个密度均已打进 APK
+```
+
 ## 更新：2026-09-13 深夜（二）—— lint 清零 + 新增工具页 ✅
 
 ### 1. lint 全部清理完毕
