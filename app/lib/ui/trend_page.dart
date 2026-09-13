@@ -1,8 +1,11 @@
+import 'package:flutter/cupertino.dart' as cupertino;
 import 'package:flutter/material.dart';
 import 'package:goldprice_domain/goldprice_domain.dart';
 
 import '../data/repository.dart';
+import 'theme.dart';
 import 'widgets/price_line_chart.dart';
+import 'widgets/ios_card.dart';
 
 class TrendPage extends StatefulWidget {
   final GoldRepository repository;
@@ -18,13 +21,22 @@ class _TrendPageState extends State<TrendPage> {
       widget.repository.loadBenchmarkHistory();
   int _rangeDays = 365;
 
-  static const List<List<Object>> _options = <List<Object>>[
-    <Object>['30天', 30],
-    <Object>['90天', 90],
-    <Object>['1年', 365],
-    <Object>['3年', 1095],
-    <Object>['全部', 100000],
-  ];
+  static const List<int> _ranges = <int>[30, 90, 365, 1095, 100000];
+
+  String _rangeLabel(int days) {
+    switch (days) {
+      case 30:
+        return '30天';
+      case 90:
+        return '90天';
+      case 365:
+        return '1年';
+      case 1095:
+        return '3年';
+      default:
+        return '全部';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,110 +52,153 @@ class _TrendPageState extends State<TrendPage> {
           if (snap.hasError || !snap.hasData) {
             return Center(child: Text('加载失败：${snap.error}'));
           }
-          final history = snap.data!;
-          final total = history.records.length;
-          final take = _rangeDays < total ? _rangeDays : total;
-          final records = history.records.sublist(total - take);
-          final closes = records.map((BenchmarkRecord r) => r.close).toList();
+          final BenchmarkHistory history = snap.data!;
+          final int total = history.records.length;
+          final int take = _rangeDays < total ? _rangeDays : total;
+          final List<BenchmarkRecord> records =
+              history.records.sublist(total - take);
+          final List<double> closes =
+              records.map((BenchmarkRecord r) => r.close).toList();
+          final List<String> dates =
+              records.map((BenchmarkRecord r) => r.date).toList();
 
-          var minValue = closes.first;
-          var maxValue = closes.first;
-          for (final v in closes) {
+          double minValue = closes.first;
+          double maxValue = closes.first;
+          for (final double v in closes) {
             if (v < minValue) minValue = v;
             if (v > maxValue) maxValue = v;
           }
-          final changePct = closes.last / closes.first - 1.0;
-          final drawdown = closes.last / maxValue - 1.0;
-          final ma20 = _tailAverage(closes, 20);
-          final ma60 = _tailAverage(closes, 60);
+          final double changePct = closes.last / closes.first - 1.0;
+          final double drawdown = closes.last / maxValue - 1.0;
+          final double? ma20 = _tailAverage(closes, 20);
+          final double? ma60 = _tailAverage(closes, 60);
 
           return ListView(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(
+                IosMetrics.pagePadding, 4, IosMetrics.pagePadding, 32),
             children: <Widget>[
-              Wrap(
-                spacing: 8,
-                children: _options.map((List<Object> opt) {
-                  final int days = opt[1] as int;
-                  return ChoiceChip(
-                    label: Text(opt[0] as String),
-                    selected: _rangeDays == days,
-                    onSelected: (_) => setState(() => _rangeDays = days),
-                  );
-                }).toList(),
+              cupertino.CupertinoSlidingSegmentedControl<int>(
+                groupValue: _rangeDays,
+                backgroundColor: const Color(0x1F767680),
+                thumbColor: IosColors.card,
+                onValueChanged: (int? value) {
+                  if (value != null) setState(() => _rangeDays = value);
+                },
+                children: <int, Widget>{
+                  for (final int days in _ranges)
+                    days: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Text(_rangeLabel(days),
+                          style: const TextStyle(fontSize: 13)),
+                    ),
+                },
               ),
-              const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        '${records.first.date}  ~  ${records.last.date}   （$take 个交易日）',
-                        style: Theme.of(context).textTheme.bodySmall,
+              const SizedBox(height: IosMetrics.cardGap),
+              IosCard(
+                padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Row(
+                        children: <Widget>[
+                          Text(
+                            '${dates.first}  →  ${dates.last}',
+                            style: const TextStyle(
+                                fontSize: 13, color: IosColors.secondaryLabel),
+                          ),
+                          const Spacer(),
+                          Text('$take 个交易日',
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  color: IosColors.secondaryLabel)),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 220,
-                        child: PriceLineChart(
-                          values: closes,
-                          labels: records
-                              .map((BenchmarkRecord r) => r.date)
-                              .toList(),
-                          lineColor: Theme.of(context).colorScheme.primary,
-                          averageLine: ma60,
-                          unit: '元/克',
-                        ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 220,
+                      child: PriceLineChart(
+                        values: closes,
+                        labels: dates,
+                        lineColor: IosColors.gold,
+                        averageLine: ma60,
+                        unit: '元/克',
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '橙线为 MA60（近 60 日均价）',
-                        style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 10),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4),
+                      child: Row(
+                        children: <Widget>[
+                          Icon(Icons.touch_app_outlined,
+                              size: 14, color: IosColors.tertiaryLabel),
+                          SizedBox(width: 5),
+                          Text(
+                            '按住图表可查看任意一天的具体数值',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: IosColors.tertiaryLabel),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 4),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Row(
+                        children: <Widget>[
+                          Container(width: 12, height: 2, color: IosColors.gold),
+                          const SizedBox(width: 6),
+                          const Text('收盘价',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: IosColors.secondaryLabel)),
+                          const SizedBox(width: 14),
+                          Container(
+                              width: 12,
+                              height: 2,
+                              color: const Color(0xFFE8A33D)),
+                          const SizedBox(width: 6),
+                          const Text('MA60 均线',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: IosColors.secondaryLabel)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      const Text('区间指标',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 10),
-                      _metric(context, '最新收盘',
-                          '${closes.last.toStringAsFixed(2)} 元/克'),
-                      _metric(context, '区间涨跌',
-                          '${changePct >= 0 ? '+' : ''}${(changePct * 100).toStringAsFixed(2)}%'),
-                      _metric(context, '区间最低 / 最高',
-                          '${minValue.toStringAsFixed(2)} / ${maxValue.toStringAsFixed(2)}'),
-                      _metric(context, '距区间高点',
-                          '${(drawdown * 100).toStringAsFixed(2)}%'),
-                      _metric(context, 'MA20',
-                          ma20 == null ? 'n/a' : ma20.toStringAsFixed(2)),
-                      _metric(context, 'MA60',
-                          ma60 == null ? 'n/a' : ma60.toStringAsFixed(2)),
-                    ],
-                  ),
+              const SizedBox(height: IosMetrics.cardGap),
+              IosCard(
+                title: '区间指标',
+                info: '均线、涨跌、回撤都只描述「已经发生了什么」。'
+                    '回测显示这类指标并不能预测后续走势 —— 真正有超额收益的是罕见的恐慌日。',
+                child: Column(
+                  children: <Widget>[
+                    _heroMetric(context, closes.last, changePct),
+                    const SizedBox(height: 10),
+                    _metricRow('区间最低 / 最高',
+                        '${minValue.toStringAsFixed(2)} / ${maxValue.toStringAsFixed(2)}'),
+                    _metricRow('距区间高点',
+                        '${(drawdown * 100).toStringAsFixed(2)}%'),
+                    _metricRow('MA20', ma20?.toStringAsFixed(2) ?? '—'),
+                    _metricRow('MA60', ma60?.toStringAsFixed(2) ?? '—'),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    '回测提醒：回撤、跌破均线这类规则在 2016-2026 的样本里都跑输「随便哪天买」。\n'
-                    '真正有超额收益的是稀有的恐慌信号（RSI 超卖、单日大跌），十年只出现几十次。\n'
-                    '所以别指望靠这个 App 抄到最低点 —— 它的第一价值是帮你选对渠道。',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+              const SizedBox(height: IosMetrics.cardGap),
+              IosCard(
+                title: '怎么理解这些数字',
+                child: Text(
+                  '回撤、跌破均线这类规则在 2016-2026 的样本里都跑输「随便哪天买」，'
+                  '所以它们在本 App 里只作提示。'
+                  '别指望靠它抄到最低点 —— 第一价值是帮你选对渠道。',
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
-              const SizedBox(height: 24),
             ],
           );
         },
@@ -151,27 +206,66 @@ class _TrendPageState extends State<TrendPage> {
     );
   }
 
-  double? _tailAverage(List<double> values, int n) {
-    if (values.length < n) return null;
-    var sum = 0.0;
-    for (var i = values.length - n; i < values.length; i++) {
-      sum += values[i];
-    }
-    return sum / n;
+  Widget _heroMetric(BuildContext context, double close, double changePct) {
+    final bool up = changePct >= 0;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: <Widget>[
+        Text(
+          close.toStringAsFixed(2),
+          style: const TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.8,
+            color: IosColors.label,
+            fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(width: 4),
+        const Text('元/克',
+            style: TextStyle(fontSize: 13, color: IosColors.secondaryLabel)),
+        const Spacer(),
+        Text(
+          '${up ? '+' : ''}${(changePct * 100).toStringAsFixed(2)}%',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: up ? IosColors.up : IosColors.down,
+          ),
+        ),
+      ],
+    );
   }
 
-  Widget _metric(BuildContext context, String label, String value) {
+  Widget _metricRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: <Widget>[
           Expanded(
             child: Text(label,
-                style: Theme.of(context).textTheme.bodyMedium),
+                style: const TextStyle(
+                    fontSize: 14, color: IosColors.secondaryLabel)),
           ),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: IosColors.label,
+                fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+              )),
         ],
       ),
     );
+  }
+
+  double? _tailAverage(List<double> values, int n) {
+    if (values.length < n) return null;
+    double sum = 0;
+    for (int i = values.length - n; i < values.length; i++) {
+      sum += values[i];
+    }
+    return sum / n;
   }
 }

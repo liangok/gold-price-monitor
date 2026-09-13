@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart' as cupertino;
 import 'package:flutter/material.dart';
 
 import 'config.dart';
@@ -10,6 +11,7 @@ import 'services/background_worker.dart';
 import 'services/notification_service.dart';
 import 'ui/home_page.dart';
 import 'ui/settings_page.dart';
+import 'ui/theme.dart';
 import 'ui/tools_page.dart';
 import 'ui/trend_page.dart';
 
@@ -67,10 +69,7 @@ class GoldPriceApp extends StatelessWidget {
     return MaterialApp(
       title: '金价监控',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: const Color(0xFFB8860B),
-      ),
+      theme: buildIosLikeTheme(),
       home: const RootShell(),
     );
   }
@@ -99,14 +98,33 @@ class _RootShellState extends State<RootShell> {
           const SettingsPage(),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (int i) => setState(() => _index = i),
-        destinations: const <NavigationDestination>[
-          NavigationDestination(icon: Icon(Icons.today), label: '今日'),
-          NavigationDestination(icon: Icon(Icons.show_chart), label: '趋势'),
-          NavigationDestination(icon: Icon(Icons.calculate), label: '工具'),
-          NavigationDestination(icon: Icon(Icons.notifications), label: '提醒'),
+      // iOS 风格标签栏（CupertinoTabBar），与灰底白卡的整体观感一致。
+      bottomNavigationBar: cupertino.CupertinoTabBar(
+        currentIndex: _index,
+        onTap: (int i) => setState(() => _index = i),
+        backgroundColor: IosColors.card,
+        activeColor: IosColors.gold,
+        inactiveColor: IosColors.secondaryLabel,
+        border: const Border(
+          top: BorderSide(color: IosColors.separator, width: 0.5),
+        ),
+        items: const <cupertino.BottomNavigationBarItem>[
+          cupertino.BottomNavigationBarItem(
+            icon: Icon(cupertino.CupertinoIcons.time),
+            label: '今日',
+          ),
+          cupertino.BottomNavigationBarItem(
+            icon: Icon(cupertino.CupertinoIcons.chart_bar_alt_fill),
+            label: '趋势',
+          ),
+          cupertino.BottomNavigationBarItem(
+            icon: Icon(cupertino.CupertinoIcons.function),
+            label: '工具',
+          ),
+          cupertino.BottomNavigationBarItem(
+            icon: Icon(cupertino.CupertinoIcons.bell),
+            label: '提醒',
+          ),
         ],
       ),
     );
