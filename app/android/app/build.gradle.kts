@@ -7,7 +7,10 @@ plugins {
 android {
     namespace = "com.liangaokai.goldprice"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Flutter 默认固定 28.2.13676358，但本机装的是 30.0.16248370。
+    // 项目没有原生代码，任意已安装的 NDK 都能满足 AGP 的配置要求，
+    // 所以这里显式对齐到本机实际版本，避免 Gradle 去联网下载指定版本。
+    ndkVersion = "30.0.16248370"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

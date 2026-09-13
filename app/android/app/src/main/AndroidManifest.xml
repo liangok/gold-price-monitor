@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 必须写在 main 清单里：Flutter 模板只把 INTERNET 放在 debug / profile 清单，
+         而那两个不会进入 release 包。少了这一行，正式版装到手机上会完全无法联网。 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
-        android:label="goldprice"
+        android:label="金价监控"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
