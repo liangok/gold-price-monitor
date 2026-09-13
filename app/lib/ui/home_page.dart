@@ -12,11 +12,15 @@ class HomeData {
   final AlertConfig alertConfig;
   final ChannelConfig channelConfig;
 
+  /// 宏观因子。可能为 null（首次运行 / 采集失败），缺失时不影响主界面。
+  final MacroSnapshot? macro;
+
   const HomeData({
     required this.snapshot,
     required this.history,
     required this.alertConfig,
     required this.channelConfig,
+    this.macro,
   });
 }
 
@@ -39,18 +43,37 @@ class _HomePageState extends State<HomePage> {
   /// 提醒默认只显示「触发了什么」，完整规则列表折叠起来。
   bool _alertsExpanded = false;
 
+  /// 买点评估默认只给结论，依据折叠。
+  bool _buyFactorsExpanded = false;
+
+  Future<MacroSnapshot?> _macroOrNull() async {
+    try {
+      return await widget.repository.loadMacro();
+    } catch (_) {
+      // 宏观因子缺失只影响「买点评估」卡片，不该让整个首页失败
+      return null;
+    }
+  }
+
   Future<HomeData> _load() async {
-    final List<Object> results = await Future.wait<Object>(<Future<Object>>[
+    // 四个请求**并发**。踩过的坑：原先把宏观请求写在 Future.wait 之后串行执行，
+    // 最坏情况要等 14s + 14s，首页会长时间转圈。
+    final List<Object?> results =
+        await Future.wait<Object?>(<Future<Object?>>[
       widget.repository.loadLatest(),
       widget.repository.loadBenchmarkHistory(),
       widget.repository.loadUserConfig(),
+      _macroOrNull(),
     ]);
     final Map<String, dynamic> cfg = results[2] as Map<String, dynamic>;
+    final MacroSnapshot? macro = results[3] as MacroSnapshot?;
+
     return HomeData(
       snapshot: results[0] as LatestSnapshot,
       history: results[1] as BenchmarkHistory,
       alertConfig: AlertConfig.fromJson(cfg),
       channelConfig: ChannelConfig.fromJson(cfg),
+      macro: macro,
     );
   }
 
@@ -96,6 +119,8 @@ class _HomePageState extends State<HomePage> {
                 else
                   const SizedBox(height: 4),
                 _benchmarkCard(context, data),
+                const SizedBox(height: IosMetrics.cardGap),
+                _buyPointCard(context, data),
                 const SizedBox(height: IosMetrics.cardGap),
                 _channelCard(context, data),
                 const SizedBox(height: IosMetrics.cardGap),
@@ -182,6 +207,194 @@ class _HomePageState extends State<HomePage> {
           Text(
             '开 ${_money(b.open)}　高 ${_money(b.high)}　低 ${_money(b.low)}',
             style: const TextStyle(fontSize: 13, color: IosColors.secondaryLabel),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------ 买点评估
+
+  Widget _buyPointCard(BuildContext context, HomeData data) {
+    final IndicatorSnapshot? ind =
+        computeLatest(data.history.closes, data.history.dates);
+    if (ind == null) return const SizedBox.shrink();
+
+    final BuyAssessment a = assessBuyPoint(
+      macro: data.macro,
+      benchmarkClose: data.snapshot.benchmark.close,
+      rsi: ind.rsi,
+      changePct: ind.changePct,
+      drawdown: ind.drawdown,
+    );
+    final Color tint = a.total >= 1
+        ? IosColors.down
+        : (a.total <= -1 ? IosColors.up : IosColors.secondaryLabel);
+
+    return IosCard(
+      title: '买点评估',
+      info: '把「现在贵不贵、顺风还是逆风」量化，帮你决定**节奏**（要不要分批），'
+          '而不是替你决定买或不买。\n\n'
+          '每一条依据都列出原始值、阈值和得分，没有黑箱。'
+          '回撤与均线在 2016-2026 的回测里都跑输基准，所以只展示、不计分。\n\n'
+          '⚠️ 它不预测短期涨跌。没有任何模型能可靠预测金价。',
+      trailing: Text(
+        a.verdict,
+        style: TextStyle(
+            fontSize: 13, fontWeight: FontWeight.w700, color: tint),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _gauge(context, a.total),
+          const SizedBox(height: 10),
+          Text(a.advice,
+              style: const TextStyle(
+                  fontSize: 13.5, height: 1.4, color: IosColors.label)),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => setState(
+                () => _buyFactorsExpanded = !_buyFactorsExpanded),
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: <Widget>[
+                Text(
+                  _buyFactorsExpanded
+                      ? '收起依据'
+                      : '查看 ${a.factors.length} 项依据',
+                  style: const TextStyle(
+                      fontSize: 13,
+                      color: IosColors.gold,
+                      fontWeight: FontWeight.w500),
+                ),
+                Icon(
+                  _buyFactorsExpanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
+                  size: 18,
+                  color: IosColors.gold,
+                ),
+              ],
+            ),
+          ),
+          if (_buyFactorsExpanded) ...<Widget>[
+            const SizedBox(height: 2),
+            ...a.factors.map((BuyFactor f) => _factorRow(context, f)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 得分刻度条：中间是中性，越右越顺风。
+  Widget _gauge(BuildContext context, int total) {
+    const int span = 8;
+    final double t = ((total + span) / (2 * span)).clamp(0.0, 1.0);
+    return Column(
+      children: <Widget>[
+        SizedBox(
+          height: 20,
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints c) {
+              final double x = (c.maxWidth - 14) * t;
+              return Stack(
+                children: <Widget>[
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 8,
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: IosColors.barTrack,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: c.maxWidth / 2 - 0.5,
+                    top: 4,
+                    child: Container(
+                        width: 1, height: 12, color: IosColors.tertiaryLabel),
+                  ),
+                  Positioned(
+                    left: x,
+                    top: 3,
+                    child: Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: IosColors.gold,
+                        shape: BoxShape.circle,
+                        boxShadow: <BoxShadow>[
+                          BoxShadow(
+                            color: IosColors.gold.withValues(alpha: 0.35),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        const Row(
+          children: <Widget>[
+            Text('偏逆风',
+                style: TextStyle(fontSize: 11, color: IosColors.secondaryLabel)),
+            Spacer(),
+            Text('中性',
+                style: TextStyle(fontSize: 11, color: IosColors.secondaryLabel)),
+            Spacer(),
+            Text('偏顺风',
+                style: TextStyle(fontSize: 11, color: IosColors.secondaryLabel)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _factorRow(BuildContext context, BuyFactor f) {
+    final String mark = f.score > 0
+        ? '${f.score}'
+        : (f.score < 0 ? f.score.toString() : '0');
+    final Color tint = f.score > 0
+        ? IosColors.down
+        : (f.score < 0 ? IosColors.up : IosColors.tertiaryLabel);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          SizedBox(
+            width: 26,
+            child: Text(mark,
+                style: TextStyle(
+                    fontSize: 13.5, fontWeight: FontWeight.w700, color: tint)),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(f.name,
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w500)),
+                    ),
+                    Text(f.valueText,
+                        style: const TextStyle(
+                            fontSize: 13, color: IosColors.secondaryLabel)),
+                  ],
+                ),
+                Text(f.reason,
+                    style: const TextStyle(
+                        fontSize: 12, color: IosColors.secondaryLabel)),
+              ],
+            ),
           ),
         ],
       ),
@@ -390,7 +603,6 @@ class _HomePageState extends State<HomePage> {
   // ------------------------------------------------------------ 品牌
 
   Widget _brandCard(BuildContext context, HomeData data) {
-    final BrandStats? stats = data.snapshot.brandStats['gold'];
     final List<BrandQuote> brands = data.snapshot.mainlandBrands
         .where((BrandQuote b) => b.gold != null)
         .toList()
@@ -401,21 +613,24 @@ class _HomePageState extends State<HomePage> {
     final double maxGold = brands.last.gold!;
     final double minGold = brands.first.gold!;
     final double span = (maxGold - minGold).abs() < 1e-9 ? 1 : maxGold - minGold;
+    // 价格区间很窄（几十元），若从 0 起画所有条一样长。
+    // 所以把坐标起点下移一点：**条越长 = 越贵**，方向与直觉一致，
+    // 同时把实际区间写在标题右侧，避免截断坐标轴造成误读。
+    final double floor = minGold - span * 0.15;
 
     return IosCard(
       title: '品牌首饰金比价',
-      info: '各品牌「足金首饰」挂牌价，通常是首饰金，不含工费。'
-          '价差看着不大，但按克重放大后是一笔钱。',
-      trailing: stats?.spread == null
-          ? null
-          : Text('价差 ${stats!.spread!.toStringAsFixed(0)} 元/克',
-              style: const TextStyle(
-                  fontSize: 13, color: IosColors.secondaryLabel)),
+      info: '各品牌「足金首饰」挂牌价（不含工费）。'
+          '价格区间很窄，所以条形坐标不是从 0 开始的，只看相对长短即可；'
+          '金色那家是最便宜的。',
+      trailing: Text(
+        '${minGold.toStringAsFixed(0)} – ${maxGold.toStringAsFixed(0)} 元/克',
+        style: const TextStyle(fontSize: 13, color: IosColors.secondaryLabel),
+      ),
       child: Column(
         children: brands.map((BrandQuote b) {
           final bool isMin = b.name == brands.first.name;
-          // 用「相对最低价的差距」做条长：最低价最长
-          final double f = 1.0 - ((b.gold! - minGold) / span) * 0.55;
+          final double f = (b.gold! - floor) / (maxGold - floor);
           return BarRow(
             label: b.name,
             valueText: '${b.gold!.toStringAsFixed(0)} 元',

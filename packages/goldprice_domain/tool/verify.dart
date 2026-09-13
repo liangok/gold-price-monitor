@@ -272,6 +272,67 @@ void main() {
   checkNum('改克重后总克重', edited.totalGrams, 63);
   checkNum('原清单不受影响', plan.totalGrams, 53);
 
+  // ---------- 10. 买点评估 ----------
+  const MacroSnapshot macro = MacroSnapshot(
+    updatedAt: '2026-09-13T23:00:00+08:00',
+    series: <String, MacroSeries>{
+      'gold_spot': MacroSeries(
+          name: '伦敦金现', date: '2026-09-11', value: 4348.35, chg20Pct: -0.0154),
+      'dxy': MacroSeries(
+          name: '美元指数', date: '2026-09-11', value: 98.9664, chg20Pct: -0.0033),
+      'usdcny': MacroSeries(
+          name: '离岸人民币', date: '2026-09-11', value: 6.6959, chg20Pct: -0.0046),
+    },
+  );
+
+  final double? intlCny = internationalGoldInCny(macro);
+  checkNum('国际金价换算', intlCny, 4348.35 * 6.6959 / 31.1034768, 1e-6);
+
+  final BuyAssessment base = assessBuyPoint(
+    macro: macro,
+    benchmarkClose: 939.54,
+    rsi: 45.4,
+    changePct: -0.0141,
+    drawdown: -0.0896,
+  );
+  checkNum('基准场景总分', base.total, 1);
+  checkBool('基准场景结论为略偏顺风', base.verdict == '略偏顺风', true);
+  checkNum('依据条数（含回撤占位）', base.factors.length, 5);
+
+  // 国内大幅溢价 → 负面
+  final BuyAssessment rich = assessBuyPoint(
+    macro: macro,
+    benchmarkClose: 985.0,
+    rsi: 45.4,
+    changePct: -0.0141,
+  );
+  checkBool('国内大幅溢价时更差', rich.total < base.total, true);
+
+  // 稀有恐慌信号 → 正面
+  final BuyAssessment panic = assessBuyPoint(
+    macro: macro,
+    benchmarkClose: 939.54,
+    rsi: 24.0,
+    changePct: -0.031,
+  );
+  checkBool('恐慌信号提升总分', panic.total > base.total, true);
+  checkNum('恐慌信号加满 4 分', panic.factors[3].score, 4);
+
+  // 回撤不加分
+  int drawdownScore = 0;
+  for (final BuyFactor f in base.factors) {
+    if (f.name == '距90日高点') drawdownScore = f.score;
+  }
+  checkNum('回撤因子不计分', drawdownScore, 0);
+
+  // 缺少宏观数据也不能崩
+  final BuyAssessment noMacro = assessBuyPoint(
+    macro: null,
+    benchmarkClose: 939.54,
+    rsi: 45.4,
+  );
+  checkBool('无宏观数据时仍可评估', noMacro.factors.isNotEmpty, true);
+
   // ---------- 汇总 ----------
   print('');
   if (_failures == 0) {

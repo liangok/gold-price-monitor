@@ -10,6 +10,7 @@
     data/latest.json            今日汇总：大盘金价 + 品牌报价 + 统计 + 溢价
     data/benchmark_history.json 大盘金价 Au99.99 完整日线（2016-12 至今）
     data/brand_history.json     品牌金店报价历史（每天追加一条）
+    data/macro.json             宏观因子（国际金价 / 美元指数 / 人民币汇率）
 
 设计原则：单个数据源失败不影响整体；已有历史数据永不丢失。
 """
@@ -28,6 +29,8 @@ from sources import (  # noqa: E402
     fetch_benchmark_history,
     fetch_bank_bars,
     fetch_brand_quotes,
+    fetch_macro,
+    MACRO_KEYS,
 )
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -58,6 +61,16 @@ def save_json(path, obj):
         fh.write("\n")
     os.replace(tmp, path)
     print("[ok] 写入 {}".format(os.path.relpath(path, ROOT)))
+
+
+def pct_change(points, n):
+    """近 n 个点的涨跌幅（n 从末尾往前数）。"""
+    if len(points) < 2:
+        return None
+    base = points[max(0, len(points) - n)]["close"]
+    if not base:
+        return None
+    return round(points[-1]["close"] / base - 1.0, 5)
 
 
 def dict_stat(prices):
@@ -180,6 +193,50 @@ def main():
     bench_records = bench_doc.get("records", [])
     last_bench = bench_records[-1] if bench_records else None
 
+    # -------- 3.5 宏观因子 -------- #
+    macro_doc = load_json(
+        os.path.join(DATA_DIR, "macro.json"),
+        {
+            "schema_version": SCHEMA_VERSION,
+            "source": "东方财富",
+            "updated_at": None,
+            "series": {},
+        },
+    )
+    macro_series = macro_doc.get("series", {})
+    try:
+        macro = fetch_macro()
+        # 合并而不是覆盖：某条序列这次没抓到，要保留上次的值，
+        # 否则一次网络抖动就会把已有因子抹掉（这正是本项目一直坚持的原则）。
+        merged = dict(macro_series)
+        for key, rec in macro["series"].items():
+            points = rec.get("points") or []
+            merged[key] = {
+                "name": rec["name"],
+                "date": rec["date"],
+                "value": rec["value"],
+                "chg20_pct": pct_change(points, 20),
+                "chg30_pct": pct_change(points, 30),
+                "history_points": len(points),
+            }
+        # 合并是为了保留旧值，但已停用的源要清掉
+        macro_series = {k: v for k, v in merged.items() if k in MACRO_KEYS}
+        macro_doc["series"] = macro_series
+        if macro.get("errors"):
+            print("[warn] 部分宏观序列失败（沿用旧值）: "
+                  + " | ".join(macro["errors"]))
+        macro_doc["updated_at"] = now_cst()
+        ok += 1
+        parts = []
+        for key in ("dxy", "usdcny", "gold_spot"):
+            rec = macro_series.get(key)
+            if rec:
+                parts.append("{} {} ({:+.2f}% 近20日)".format(
+                    rec["name"], rec["value"], (rec["chg20_pct"] or 0) * 100))
+        print("[ok] 宏观因子: " + " | ".join(parts))
+    except FetchError as exc:
+        print("[warn] 宏观因子采集失败，沿用已有数据: {}".format(exc))
+
     # -------- 4. 统计与溢价 -------- #
     mainland = [b for b in brands if b.get("region") == "mainland"]
     golds = {b["name"]: b["gold"] for b in mainland if isinstance(b.get("gold"), (int, float))}
@@ -235,6 +292,7 @@ def main():
     save_json(os.path.join(DATA_DIR, "benchmark_history.json"), bench_doc)
     save_json(os.path.join(DATA_DIR, "brand_history.json"), brand_doc)
     save_json(os.path.join(DATA_DIR, "bank_bar_history.json"), bank_doc)
+    save_json(os.path.join(DATA_DIR, "macro.json"), macro_doc)
     save_json(os.path.join(DATA_DIR, "latest.json"), latest)
 
     # -------- 4. 打印摘要 -------- #

@@ -343,11 +343,7 @@ class _ToolsPageState extends State<ToolsPage> {
               '同样 ${budget.toStringAsFixed(0)} 元，${cmp.best.name} 能买 ${cmp.best.gramsForBudget.toStringAsFixed(1)} 克，${cmp.worst.name} 只能买 ${cmp.worst.gramsForBudget.toStringAsFixed(1)} 克，相差 ${(cmp.best.gramsForBudget - cmp.worst.gramsForBudget).toStringAsFixed(1)} 克。',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 6),
-            Text(
-              '渠道参数为假设值（可在仓库 config/user.json 调整），仅供参考。',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+
           ],
         ),
       ),

@@ -263,3 +263,139 @@ def fetch_bank_bars():
     parsed["source"] = "金价查询网 各大银行/品牌金店金条价格一览表"
     parsed["url"] = HUANGJINJIAGE_BANK_URL
     return parsed
+
+
+# --------------------------------------------------------------------------- #
+# 宏观因子：伦敦金现 / 美元指数 / 人民币汇率
+#
+# 用来判断「当前对买家是顺风还是逆风」。全部是**数值序列**，不需要任何 AI ——
+# 判断规则写在 App 的领域层里，权重与依据都可见、可测试。
+#
+# 数据源用新浪财经（实测最稳，国内与 GitHub Actions 上都通）：
+#   - 实时值：hq.sinajs.cn
+#   - 日线历史：vip.stock…（外汇）/ stock2…（国际期货），可回溯多年
+#
+# 换过两个源：东财 kline 密集请求后会被掐连接；stooq / Yahoo 分别被
+# JS 挑战与限流挡住。伦敦金用**现货**而不是 COMEX 期货 —— 算「国内贵了多少」
+# 时期货基差（实测约 1%）会直接把结论带偏。
+# --------------------------------------------------------------------------- #
+SINA_HEADERS = {"Referer": "https://finance.sina.com.cn"}
+
+# (key, 实时代码, 名称, 历史类型, 历史代码)
+MACRO_SERIES = (
+    ("gold_spot", "hf_XAU", "伦敦金现", "futures", "XAU"),
+    ("dxy", "DINIW", "美元指数", "forex", "DINIW"),
+    ("usdcny", "fx_susdcny", "在岸人民币", "forex", "fx_susdcny"),
+)
+
+
+#: 当前使用的宏观序列键。采集端据此清理「已经停用的旧源」残留。
+MACRO_KEYS = tuple(item[0] for item in MACRO_SERIES)
+
+
+def _sina_extract_quoted(text):
+    start = text.find('"')
+    end = text.rfind('"')
+    if start < 0 or end <= start:
+        return None
+    return text[start + 1:end]
+
+
+def fetch_sina_live(codes):
+    """一次抓多个实时值，返回 {代码: 原始字段串}。"""
+    body = _http_get("https://hq.sinajs.cn/list=" + ",".join(codes),
+                     headers=SINA_HEADERS)
+    out = {}
+    for m in re.finditer(r'hq_str_([A-Za-z0-9_]+)="([^"]*)"', body):
+        out[m.group(1)] = m.group(2)
+    if not out:
+        raise FetchError("新浪实时行情为空")
+    return out
+
+
+def fetch_sina_history(kind, code):
+    """抓新浪日线历史，返回按日期升序的 [{date, close}, ...]。"""
+    if kind == "forex":
+        url = ("https://vip.stock.finance.sina.com.cn/forex/api/jsonp.php/"
+               "var%20_k=/NewForexService.getDayKLine?symbol=" + code)
+    else:
+        url = ("https://stock2.finance.sina.com.cn/futures/api/jsonp.php/"
+               "var%20_k=/GlobalFuturesService.getGlobalFuturesDailyKLine?symbol=" + code)
+    body = _http_get(url, headers=SINA_HEADERS)
+
+    points = []
+    if kind == "forex":
+        # 形如：date,open,close,high,low,|date,open,close,high,low,|…
+        payload = _sina_extract_quoted(body)
+        if not payload:
+            raise FetchError("新浪日线格式异常: " + code)
+        for chunk in payload.split("|"):
+            parts = chunk.split(",")
+            if len(parts) < 3:
+                continue
+            try:
+                points.append({"date": parts[0], "close": float(parts[2])})
+            except ValueError:
+                continue
+    else:
+        start = body.find("[")
+        end = body.rfind("]")
+        if start < 0 or end <= start:
+            raise FetchError("新浪日线格式异常: " + code)
+        try:
+            raw = json.loads(body[start:end + 1])
+        except json.JSONDecodeError as exc:
+            raise FetchError("新浪日线解析失败: " + code) from exc
+        for item in raw:
+            try:
+                points.append(
+                    {"date": str(item["date"]), "close": float(item["close"])})
+            except (KeyError, TypeError, ValueError):
+                continue
+
+    if len(points) < 2:
+        raise FetchError("新浪日线为空: " + code)
+    points.sort(key=lambda p: p["date"])
+    return points
+
+
+def fetch_macro():
+    """
+    抓取宏观因子：实时值 + 日线历史。
+
+    允许部分失败 —— 少一条不影响其它，也不该让采集整体失败。
+    """
+    series = {}
+    errors = []
+
+    live = {}
+    try:
+        live = fetch_sina_live([code for _, code, _, _, _ in MACRO_SERIES])
+    except FetchError as exc:
+        errors.append("实时值: {}".format(exc))
+
+    for key, live_code, name, kind, hist_code in MACRO_SERIES:
+        try:
+            points = fetch_sina_history(kind, hist_code)
+        except FetchError as exc:
+            errors.append("{}: {}".format(key, exc))
+            continue
+
+        value = points[-1]["close"]
+        raw = live.get(live_code)
+        if raw:
+            try:
+                value = float(raw.split(",")[0])
+            except (ValueError, IndexError):
+                pass
+        series[key] = {
+            "name": name,
+            "date": points[-1]["date"],
+            "value": value,
+            "points": points,
+        }
+        time.sleep(1.2)  # 对新浪也保持礼貌
+
+    if not series:
+        raise FetchError("全部宏观序列都抓取失败：" + " | ".join(errors))
+    return {"series": series, "errors": errors}

@@ -38,6 +38,7 @@ class RepoConfig {
   List<String> get brandHistoryUrls => urlsFor('data/brand_history.json');
   List<String> get bankBarHistoryUrls => urlsFor('data/bank_bar_history.json');
   List<String> get userConfigUrls => urlsFor('config/user.json');
+  List<String> get macroUrls => urlsFor('data/macro.json');
 }
 
 /// 一次成功拉取的结果。

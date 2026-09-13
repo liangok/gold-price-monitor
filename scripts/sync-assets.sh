@@ -13,6 +13,7 @@ cp "$REPO_ROOT/data/latest.json"              "$DEST/latest.json"
 cp "$REPO_ROOT/data/benchmark_history.json"   "$DEST/benchmark_history.json"
 cp "$REPO_ROOT/data/brand_history.json"       "$DEST/brand_history.json"
 cp "$REPO_ROOT/data/bank_bar_history.json"    "$DEST/bank_bar_history.json"
+cp "$REPO_ROOT/data/macro.json"               "$DEST/macro.json"
 cp "$REPO_ROOT/config/user.json"              "$DEST/user.json"
 
 echo "已同步离线快照到 app/assets/data/（$(du -sh "$DEST" | cut -f1)）"

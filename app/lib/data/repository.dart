@@ -17,6 +17,8 @@ class GoldRepository {
   final RepoConfig repo;
   final Map<String, String> _cache = <String, String>{};
   final Map<String, String> _usedSource = <String, String>{};
+  /// 只有**核心**数据（行情 / 历史 / 配置）才决定「当前为打包快照」横幅。
+  /// 可选数据（如宏观因子）缺失时不该说「数据不新鲜」—— 行情可能明明是最新的。
   final Set<String> _bundled = <String>{};
 
   GoldRepository(this.repo);
@@ -30,14 +32,15 @@ class GoldRepository {
   Future<String> _get(
     String key,
     List<String> candidates,
-    String assetPath,
-  ) async {
+    String assetPath, {
+    bool core = true,
+  }) async {
     // 1. 网络：并发取较新的那份
     try {
       final fetched = await fetchFreshest(candidates);
       _cache[key] = fetched.text;
       _usedSource[key] = fetched.url ?? 'network';
-      _bundled.remove(key);
+      if (core) _bundled.remove(key);
       return fetched.text;
     } catch (_) {
       // 落到离线快照
@@ -48,7 +51,7 @@ class GoldRepository {
       final bundled = await rootBundle.loadString(assetPath);
       _cache[key] = bundled;
       _usedSource[key] = assetPath;
-      _bundled.add(key);
+      if (core) _bundled.add(key);
       return bundled;
     } catch (_) {
       // 落到内存缓存
@@ -70,6 +73,13 @@ class GoldRepository {
     return _get('benchmark', repo.benchmarkHistoryUrls,
             'assets/data/benchmark_history.json')
         .then(BenchmarkHistory.decode);
+  }
+
+  /// 宏观因子（伦敦金现 / 美元指数 / 人民币汇率）。
+  Future<MacroSnapshot> loadMacro() {
+    return _get('macro', repo.macroUrls, 'assets/data/macro.json', core: false)
+        .then(MacroSnapshot.decode);
+    // 注意：宏观因子走 core: false —— 它缺失不该让界面提示「数据不新鲜」
   }
 
   /// 用户配置（预算 / 渠道假设 / 提醒阈值），与采集脚本共用同一份。
