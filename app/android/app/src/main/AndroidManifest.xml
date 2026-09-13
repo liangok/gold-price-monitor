@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- 定时提醒：开机后让 WorkManager 重新排程，否则重启手机提醒会失效 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- 「一键关闭电池优化」需要它弹系统授权框。仅个人侧载使用，不上架应用商店。 -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
 
     <application
         android:label="金价监控"

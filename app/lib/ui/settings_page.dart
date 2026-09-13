@@ -4,6 +4,7 @@ import '../services/alert_runner.dart';
 import '../services/alert_settings.dart';
 import '../services/background_worker.dart';
 import '../services/notification_service.dart';
+import '../services/system_channel.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -12,30 +13,43 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsPageState extends State<SettingsPage>
+    with WidgetsBindingObserver {
   AlertSettings? _settings;
   final TextEditingController _targetController = TextEditingController();
   bool _permissionGranted = true;
   bool? _scheduled;
+  bool? _batteryExempt;
   String? _status;
   bool _busy = false;
 
   @override
   void initState() {
     super.initState();
+    // 监听生命周期：从系统设置页返回本页时，自动刷新电池优化状态
+    WidgetsBinding.instance.addObserver(this);
     _reload();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _targetController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _reload();
+    }
   }
 
   Future<void> _reload() async {
     final settings = await AlertSettings.load();
     final granted = await NotificationService.hasPermission();
     final scheduled = await BackgroundScheduler.isScheduled();
+    final batteryExempt = await SystemChannel.isIgnoringBatteryOptimizations();
     if (!mounted) return;
     setState(() {
       _settings = settings;
@@ -44,6 +58,7 @@ class _SettingsPageState extends State<SettingsPage> {
           : settings.targetPrice!.toStringAsFixed(0);
       _permissionGranted = granted;
       _scheduled = scheduled;
+      _batteryExempt = batteryExempt;
     });
   }
 
@@ -266,16 +281,63 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        const Text('小米 HyperOS 必做设置',
+                        const Text('小米 HyperOS 保活（决定提醒是否真的会响）',
                             style: TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 6),
                         Text(
-                          '小米的省电策略会杀后台，导致定时提醒不触发。请手动设置：\n'
-                          '1. 设置 → 应用管理 → 金价监控 → 省电策略 → 无限制\n'
-                          '2. 同页面 → 允许自启动\n'
-                          '3. 最近任务列表里下拉本应用卡片 → 加锁\n'
-                          '4. 确认通知权限已开\n\n'
-                          '设置完点上面「发送测试通知」验证。若收不到，多半是被省电策略拦了。',
+                          '小米的省电策略会杀后台，导致定时提醒不触发。'
+                          '下面几个按钮直接跳到对应系统页面，比自己在设置里翻快得多。',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: <Widget>[
+                            Icon(
+                              _batteryExempt == true
+                                  ? Icons.check_circle
+                                  : Icons.warning_amber,
+                              size: 18,
+                              color: _batteryExempt == true
+                                  ? Colors.green.shade700
+                                  : Theme.of(context).colorScheme.error,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                _batteryExempt == null
+                                    ? '电池优化状态：读取中…'
+                                    : (_batteryExempt!
+                                        ? '电池优化：已关闭（正确）'
+                                        : '电池优化：未关闭，提醒可能失效'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: <Widget>[
+                            FilledButton.tonal(
+                              onPressed: () =>
+                                  SystemChannel.openBatteryOptimizationSettings(),
+                              child: const Text('关闭电池优化'),
+                            ),
+                            FilledButton.tonal(
+                              onPressed: () =>
+                                  SystemChannel.openAutostartSettings(),
+                              child: const Text('打开自启动管理'),
+                            ),
+                            FilledButton.tonal(
+                              onPressed: () => SystemChannel.openAppSettings(),
+                              child: const Text('打开应用详情'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          '设置完返回本页会自动刷新状态。另外建议在最近任务列表里'
+                          '下拉本应用卡片加锁。若「发送测试通知」收不到，基本都是被省电策略拦了。',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],

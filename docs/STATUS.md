@@ -61,6 +61,38 @@ dart run tool/verify.dart
 - `scripts/dev-env.sh`：自动接上 Android Studio 的 JDK 25 与 Android SDK
   （还会探测 `$HOME` 是否可写，不可写时自动把缓存收进仓库）
 
+## 更新：2026-09-14 —— 「一键跳系统设置」按钮（保活关键）✅
+
+### 背景
+
+小米 HyperOS 的省电策略会杀后台，是**通知能否真的按时弹出**的最大风险点。
+之前设置页只能「用文字告诉用户去改设置」，这轮改成**直接跳转**。
+
+### 实现（原生 MethodChannel，不引入任何第三方依赖）
+
+- `app/android/.../MainActivity.kt` —— 三个方法：
+  - `isIgnoringBatteryOptimizations`：查是否已加入电池优化白名单
+  - `openBatteryOptimizationSettings`：弹系统「忽略电池优化」授权框
+    （失败则退到电池优化设置列表）
+  - `openAutostartSettings`：**按 ComponentName 依次尝试各家 ROM 的私有自启动页**，
+    小米（`com.miui.permcenter.autostart.AutoStartManagementActivity`）排在最前，
+    另有华为 / OPPO / vivo 的页面；全失败退回应用详情页
+- `app/lib/services/system_channel.dart` —— Dart 侧封装
+- 设置页新增三个按钮 + **电池优化状态实时显示**，
+  并用 `WidgetsBindingObserver` 在**从系统设置页返回时自动刷新状态**
+- 清单新增 `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`（仅个人侧载使用，不上架）
+
+### 验证证据
+
+```
+aapt2 dump badging → uses-permission: REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+classes.dex 内含字符串：
+  com.liangaokai.goldprice/system
+  com.miui.permcenter.autostart
+  isIgnoringBatteryOptimizations / openAutostartSettings / openBatteryOptimizationSettings
+flutter analyze → No issues found
+```
+
 ## 更新：2026-09-14 凌晨 —— 仓库上线 + 修复一个重要 bug ✅
 
 ### 1. GitHub 仓库已上线，Actions 端到端跑通
