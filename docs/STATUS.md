@@ -6,9 +6,8 @@
 `flutter analyze` 与 `dart analyze` 均 **No issues found**，跨语言一致性 **98/98** 通过，
 release APK 已构建（51.2MB，含离线快照）。
 
-**剩余仅两项需要人工完成：**
-1. 创建 GitHub 仓库（否则 Actions 不跑、App 拿不到实时数据）
-2. 装到小米 13 Ultra 上验证通知真机可用
+**GitHub 仓库已上线、Actions 已验证可自动采集并提交数据。**
+**剩余仅一项需要人工完成：装到小米 13 Ultra 上验证通知真机可用。**
 
 ## 一、已完成并验证
 
@@ -61,6 +60,52 @@ dart run tool/verify.dart
 - `.toolhome/`：Gradle 9.3.1 与 pub 缓存约 1.8G —— **明天不用重下**
 - `scripts/dev-env.sh`：自动接上 Android Studio 的 JDK 25 与 Android SDK
   （还会探测 `$HOME` 是否可写，不可写时自动把缓存收进仓库）
+
+## 更新：2026-09-14 凌晨 —— 仓库上线 + 修复一个重要 bug ✅
+
+### 1. GitHub 仓库已上线，Actions 端到端跑通
+
+仓库：https://github.com/liangok/gold-price-monitor （public）
+
+**实测证据：**
+- 运行结果：`采集金价数据 | event=push | conclusion=success`
+- **工作流成功把数据提交回仓库**：`7649a6d data: 更新金价数据 2026-09-13`
+- 说明工作流里显式声明的 `permissions: contents: write` 生效，
+  **不需要另外去改 Settings 里的 Workflow permissions**
+- 采集时间表：每天北京时间 **10:40** 与 **16:00** 自动跑，也可在 Actions 页手动触发
+
+> 小提示：首次 push 没有触发工作流，第二次 push（改动了 collector / workflow 路径）正常触发。
+
+### 2. ⚠️ 修复了一个会导致「一整天显示旧价格」的 bug
+
+**现象**：检查线上数据时发现 jsDelivr 返回的是旧版本。
+
+**根因**（实测响应头）：
+```
+cache-control: public, max-age=604800, s-maxage=43200
+```
+`s-maxage=43200` = **12 小时 CDN 缓存**。而原实现把 jsDelivr 放在首选，
+意味着这个每日更新的 App 可能**一整天都在显示昨天的金价**。
+实测加随机查询串也穿不透缓存（连续 3 次都返回旧版本）。
+
+**修复**：不再按顺序取第一个，改为**并发请求两个源，
+按数据自带的 generated_at / updated_at 取较新的那份**。
+逻辑放进领域层 `fetchFreshest()`（App 与后台提醒共用），并补了单元测试。
+
+**实证验证**（`dart run tool/check_sources.dart`）：
+```
+raw      = 2026-09-13T22:13:42+08:00   （实时）
+jsDelivr = 2026-09-13T22:04:43+08:00   （落后 9 分钟）
+fetchFreshest 选中 = 2026-09-13T22:13:42+08:00   ← 正确选了较新的
+```
+
+若 raw 在国内不通，仍会自动用 jsDelivr（可能略旧但可达）；
+提醒侧还有 72 小时新鲜度保护，不会基于陈旧数据误报。
+
+### 3. 新增诊断工具
+
+`packages/goldprice_domain/tool/check_sources.dart` —— 随时查看两个源各自的数据
+时间戳以及最终选中哪一个。
 
 ## 更新：2026-09-13 深夜（三）—— 自定义应用图标 ✅
 

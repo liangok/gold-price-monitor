@@ -195,14 +195,32 @@ void main() {
   final latest = repo.latestUrls;
   checkNum('候选地址数量', latest.length, 2);
   checkBool(
-      '首选 jsDelivr',
+      'raw 在前（顺序非决定性，真正选择逻辑是比数据时间戳）',
       latest.first ==
-          'https://cdn.jsdelivr.net/gh/someone/gold-price-monitor@main/data/latest.json',
+          'https://raw.githubusercontent.com/someone/gold-price-monitor/main/data/latest.json',
       true);
   checkBool(
-      '回退 raw.githubusercontent',
+      'jsDelivr 作为候选',
       latest[1] ==
-          'https://raw.githubusercontent.com/someone/gold-price-monitor/main/data/latest.json',
+          'https://cdn.jsdelivr.net/gh/someone/gold-price-monitor@main/data/latest.json',
+      true);
+
+  // ---------- 8. 数据时间戳解析（用于在多个数据源之间挑较新的）----------
+  checkBool(
+      'dataStamp 读取 generated_at',
+      dataStamp('{"generated_at":"2026-09-13T22:13:42+08:00"}') ==
+          '2026-09-13T22:13:42+08:00',
+      true);
+  checkBool(
+      'dataStamp 读取 updated_at',
+      dataStamp('{"updated_at":"2026-09-13T22:04:43+08:00"}') ==
+          '2026-09-13T22:04:43+08:00',
+      true);
+  checkNull('dataStamp 非 JSON 返回 null', dataStamp('not json'));
+  checkNull('dataStamp 无时间戳返回 null', dataStamp('{"a":1}'));
+  checkBool(
+      'ISO8601 可直接按字典序比较新旧',
+      '2026-09-13T22:13:42+08:00'.compareTo('2026-09-13T22:04:43+08:00') > 0,
       true);
 
   // ---------- 汇总 ----------

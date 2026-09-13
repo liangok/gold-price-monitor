@@ -64,12 +64,6 @@ class _RootShellState extends State<RootShell> {
   final GoldRepository _repository = GoldRepository(appRepoConfig);
 
   @override
-  void dispose() {
-    _repository.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(

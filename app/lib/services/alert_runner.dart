@@ -1,7 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:goldprice_domain/goldprice_domain.dart';
 
 import '../config.dart';
@@ -40,33 +36,11 @@ class AlertCheckResult {
   int get triggeredCount => alerts.where((AlertResult a) => a.triggered).length;
 }
 
-/// 用纯 HTTP 拉取，**刻意不使用离线快照**。
-///
-/// 提醒必须基于真实最新行情；如果拿打包快照去判定，可能因为数据陈旧而误报。
-Future<String> _fetchText(List<String> urls) async {
-  final client = HttpClient()
-    ..connectionTimeout = const Duration(seconds: 15);
-  Object? lastError;
-  try {
-    for (final url in urls) {
-      try {
-        final request = await client.getUrl(Uri.parse(url));
-        final response =
-            await request.close().timeout(const Duration(seconds: 20));
-        if (response.statusCode != 200) {
-          lastError = 'HTTP ${response.statusCode}';
-          continue;
-        }
-        return await response.transform(utf8.decoder).join();
-      } catch (error) {
-        lastError = error;
-      }
-    }
-  } finally {
-    client.close(force: true);
-  }
-  throw StateError('拉取行情失败：$lastError');
-}
+// 行情统一走 domain 包的 fetchFreshest：并发请求 raw 与 jsDelivr，
+// 按数据自带的时间戳取较新的那份（jsDelivr 有 12 小时 CDN 缓存，会返回旧数据）。
+//
+// 注意：这里**刻意不使用离线快照** —— 提醒必须基于真实最新行情，
+// 拿打包快照去判定可能因数据陈旧而误报。
 
 /// 拉取行情 → 判定策略 →（可选）发通知。
 ///
@@ -79,7 +53,7 @@ Future<AlertCheckResult> runAlertCheck({required bool notify}) async {
   }
 
   final latest = LatestSnapshot.decode(
-      await _fetchText(appRepoConfig.latestUrls));
+      (await fetchFreshest(appRepoConfig.latestUrls)).text);
 
   // 数据新鲜度保护：如果采集端已经好几天没更新（Actions 挂了、仓库没推），
   // 基于陈旧行情发提醒会误导用户，直接跳过。
@@ -93,7 +67,7 @@ Future<AlertCheckResult> runAlertCheck({required bool notify}) async {
   }
 
   final history = BenchmarkHistory.decode(
-      await _fetchText(appRepoConfig.benchmarkHistoryUrls));
+      (await fetchFreshest(appRepoConfig.benchmarkHistoryUrls)).text);
 
   final snapshot = computeLatest(history.closes, history.dates);
   if (snapshot == null) {
