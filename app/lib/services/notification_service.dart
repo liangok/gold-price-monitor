@@ -22,7 +22,8 @@ class NotificationService {
     if (_ready) return;
     await _plugin.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        // 用单色矢量图，不能用彩色启动图标（否则状态栏会出现白方块）
+        android: AndroidInitializationSettings('@drawable/ic_notification'),
       ),
     );
     _ready = true;

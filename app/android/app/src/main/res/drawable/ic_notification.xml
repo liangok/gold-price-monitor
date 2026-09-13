@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  通知栏小图标。
+
+  Android 要求通知小图标是「单色 + 带透明通道」的图案，系统会只取 alpha 通道
+  并染成白色。直接用启动图标（彩色 mipmap）会导致状态栏出现一个白方块 —— 这是
+  Android 通知最常见的坑之一。所以这里单独画一个白色的上行折线。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- 上行折线 -->
+    <path
+        android:pathData="M3,17 L9,11 L13,15 L21,7"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- 末端高亮点 -->
+    <path
+        android:pathData="M21,7 m-2.2,0 a2.2,2.2 0 1,0 4.4,0 a2.2,2.2 0 1,0 -4.4,0"
+        android:fillColor="#FFFFFF" />
+</vector>

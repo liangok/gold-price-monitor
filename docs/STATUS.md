@@ -61,6 +61,52 @@ dart run tool/verify.dart
 - `scripts/dev-env.sh`：自动接上 Android Studio 的 JDK 25 与 Android SDK
   （还会探测 `$HOME` 是否可写，不可写时自动把缓存收进仓库）
 
+## 更新：2026-09-14 —— 真机全链路验证通过 🎉
+
+**在小米 13 Ultra（2304FPN6DC / Android 16 / HyperOS V816）上实测通过。**
+
+### 通过 USB 调试实测到的结果
+
+| 检查项 | 证据 |
+| --- | --- |
+| App 安装并运行 | 进程存活、无崩溃 |
+| **拉到实时数据** | 首页显示 939.54 元/克，**无「打包快照」提示** |
+| 今日汇总页 | 渠道对比 / 大盘 / 提醒 / 品牌比价 全部正确渲染 |
+| 趋势页 | 折线图 + MA60 + 区间指标（区间涨跌 +34.07%、距高点 -24.41%） |
+| 工具页 | 一口价折算、预算可买克重、五金清单 |
+| 提醒页 | 正确检测通知权限状态；「立即检查」返回「数据日期 2026-09-11 触发 1 条」|
+| **通知真的弹出** | 系统 NotificationRecord（id=9001, channel=goldprice_alerts）|
+| 通知渠道 | `NotificationChannel{mId='goldprice_alerts', mName=金价提醒, mImportance=4}` |
+| 电池优化白名单 | `dumpsys deviceidle whitelist` 含 com.liangaokai.goldprice |
+| **后台定时任务** | `dumpsys jobscheduler` 中有 `androidx.work...SystemJobService` |
+
+### 修掉了一个只在真机上才暴露的严重 bug
+
+**现象**：App 装在手机上后首页**一直转圈**，永不结束。
+
+**诊断**（用手机自带的 curl 实测）：
+
+| 数据源 | 手机实测 |
+| --- | --- |
+| raw.githubusercontent.com | **HTTPS 一直超时**（ping 通，但 HTTPS 被墙）|
+| cdn.jsdelivr.net | 通，但**慢到 8.85 秒** |
+
+而原实现的问题有两层：
+1. 超时只设了 6 秒 —— 比 jsDelivr 的实际耗时还短；
+2. **`client.getUrl()` 没有独立超时** —— 连接被黑洞时会永久挂起，
+   于是 `Future.wait` 永不完成，界面一直转圈。
+
+**修复**：
+- 改为**顺序尝试、第一个成功即返回**
+- 每个源都有**覆盖整个请求**的超时，且所有源合计不超过总预算（14s）——
+  保证最坏情况也有上限，之后走离线快照
+- 候选顺序按手机实测重排：
+  `api.github.com`（**0.64s，且内容最新**）→ `gcore.jsdelivr.net`（3.3s）
+  → `cdn.jsdelivr.net`（5.5s）→ `raw.githubusercontent.com`（常被墙）
+- 顺带支持了 GitHub 内容接口的 base64 信封
+
+另外把通知小图标从彩色启动图标换成**单色矢量图**（否则状态栏会显示成白方块）。
+
 ## 更新：2026-09-14 —— 「一键跳系统设置」按钮（保活关键）✅
 
 ### 背景
