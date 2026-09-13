@@ -10,6 +10,7 @@ import 'services/background_worker.dart';
 import 'services/notification_service.dart';
 import 'ui/home_page.dart';
 import 'ui/settings_page.dart';
+import 'ui/tools_page.dart';
 import 'ui/trend_page.dart';
 
 Future<void> main() async {
@@ -76,6 +77,7 @@ class _RootShellState extends State<RootShell> {
         children: <Widget>[
           HomePage(repository: _repository),
           TrendPage(repository: _repository),
+          ToolsPage(repository: _repository),
           const SettingsPage(),
         ],
       ),
@@ -85,6 +87,7 @@ class _RootShellState extends State<RootShell> {
         destinations: const <NavigationDestination>[
           NavigationDestination(icon: Icon(Icons.today), label: '今日'),
           NavigationDestination(icon: Icon(Icons.show_chart), label: '趋势'),
+          NavigationDestination(icon: Icon(Icons.calculate), label: '工具'),
           NavigationDestination(icon: Icon(Icons.notifications), label: '提醒'),
         ],
       ),
