@@ -1,13 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:goldprice_domain/goldprice_domain.dart';
 
 import '../data/repository.dart';
+import '../services/plan_store.dart';
 
 class ToolsData {
   final LatestSnapshot snapshot;
   final ChannelConfig channelConfig;
+  final GoldPlan plan;
 
-  const ToolsData({required this.snapshot, required this.channelConfig});
+  const ToolsData({
+    required this.snapshot,
+    required this.channelConfig,
+    required this.plan,
+  });
 }
 
 /// 买金实用工具。
@@ -25,18 +33,51 @@ class ToolsPage extends StatefulWidget {
 }
 
 class _ToolsPageState extends State<ToolsPage> {
-  late final Future<ToolsData> _future = _load();
-
   final TextEditingController _totalPrice = TextEditingController();
   final TextEditingController _grams = TextEditingController();
   final TextEditingController _budget = TextEditingController(text: '75000');
+
+  /// 五金清单：逐件的克重与工费输入框
+  final List<TextEditingController> _gramsControllers =
+      <TextEditingController>[];
+  final List<TextEditingController> _laborControllers =
+      <TextEditingController>[];
+  GoldPlan? _plan;
+
+  late final Future<ToolsData> _future = _load();
 
   @override
   void dispose() {
     _totalPrice.dispose();
     _grams.dispose();
     _budget.dispose();
+    for (final TextEditingController c in _gramsControllers) {
+      c.dispose();
+    }
+    for (final TextEditingController c in _laborControllers) {
+      c.dispose();
+    }
     super.dispose();
+  }
+
+  static String _trimNumber(double value) {
+    if (value == value.roundToDouble()) return value.toStringAsFixed(0);
+    return value.toStringAsFixed(1);
+  }
+
+  void _updatePiece(int index, {double? grams, double? labor}) {
+    final GoldPlan? plan = _plan;
+    if (plan == null || index < 0 || index >= plan.pieces.length) return;
+    final GoldPiece piece = plan.pieces[index];
+    final GoldPlan updated = plan.withPiece(
+      index,
+      piece.copyWith(
+        grams: grams ?? piece.grams,
+        laborPerGram: labor ?? piece.laborPerGram,
+      ),
+    );
+    setState(() => _plan = updated);
+    unawaited(PlanStore.save(updated));
   }
 
   Future<ToolsData> _load() async {
@@ -44,9 +85,17 @@ class _ToolsPageState extends State<ToolsPage> {
       widget.repository.loadLatest(),
       widget.repository.loadUserConfig(),
     ]);
+    final GoldPlan plan = await PlanStore.load();
+    for (final GoldPiece piece in plan.pieces) {
+      _gramsControllers.add(
+          TextEditingController(text: _trimNumber(piece.grams)));
+      _laborControllers.add(
+          TextEditingController(text: _trimNumber(piece.laborPerGram)));
+    }
     return ToolsData(
       snapshot: results[0] as LatestSnapshot,
       channelConfig: ChannelConfig.fromJson(results[1] as Map<String, dynamic>),
+      plan: plan,
     );
   }
 
@@ -76,6 +125,8 @@ class _ToolsPageState extends State<ToolsPage> {
               _onePriceCard(context, data),
               const SizedBox(height: 12),
               _budgetCard(context, data),
+              const SizedBox(height: 12),
+              _planCard(context, data),
               const SizedBox(height: 24),
             ],
           );
@@ -303,6 +354,186 @@ class _ToolsPageState extends State<ToolsPage> {
             const SizedBox(height: 6),
             Text(
               '渠道参数为假设值（可在仓库 config/user.json 调整），仅供参考。',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------- 五金清单
+
+  void _resetPlan() {
+    final GoldPlan fresh = GoldPlan.weddingFive;
+    for (var i = 0;
+        i < fresh.pieces.length && i < _gramsControllers.length;
+        i++) {
+      _gramsControllers[i].text = _trimNumber(fresh.pieces[i].grams);
+      _laborControllers[i].text = _trimNumber(fresh.pieces[i].laborPerGram);
+    }
+    setState(() => _plan = fresh);
+    unawaited(PlanStore.save(fresh));
+  }
+
+  Widget _planCard(BuildContext context, ToolsData data) {
+    final GoldPlan plan = _plan ?? data.plan;
+    final BrandQuote? cheapest = data.snapshot.cheapestMainlandGold;
+    if (cheapest == null) {
+      return const Card(child: ListTile(title: Text('暂无品牌数据')));
+    }
+
+    final List<PlanChannelCost> costs = pricePlan(
+      plan: plan,
+      benchmarkClose: data.snapshot.benchmark.close,
+      brandName: cheapest.name,
+      brandGold: cheapest.gold!,
+      bankBarPrice: data.snapshot.cheapestBankBarPrice,
+      config: data.channelConfig,
+    );
+    PlanChannelCost best = costs.first;
+    PlanChannelCost worst = costs.first;
+    for (final PlanChannelCost c in costs) {
+      if (c.total < best.total) best = c;
+      if (c.total > worst.total) worst = c;
+    }
+    final double gap = worst.total - best.total;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                const Text('五金清单',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Spacer(),
+                TextButton(
+                  onPressed: _resetPlan,
+                  child: const Text('恢复默认'),
+                ),
+              ],
+            ),
+            Text(
+              '逐件录入你的五金，算出整份清单在各渠道要花多少钱。'
+              '工费按每件填 —— 古法金、3D 硬金差别很大。',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: const <Widget>[
+                Expanded(
+                    flex: 3,
+                    child: Text('首饰',
+                        style: TextStyle(fontWeight: FontWeight.w600))),
+                Expanded(
+                    flex: 3,
+                    child: Text('克重',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontWeight: FontWeight.w600))),
+                SizedBox(width: 6),
+                Expanded(
+                    flex: 3,
+                    child: Text('工费/克',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontWeight: FontWeight.w600))),
+              ],
+            ),
+            ...List<Widget>.generate(plan.pieces.length, (int i) {
+              final GoldPiece piece = plan.pieces[i];
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(flex: 3, child: Text(piece.name)),
+                    Expanded(
+                      flex: 3,
+                      child: TextField(
+                        controller: _gramsControllers[i],
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        textAlign: TextAlign.center,
+                        decoration: const InputDecoration(
+                            isDense: true, border: OutlineInputBorder()),
+                        onChanged: (String value) =>
+                            _updatePiece(i, grams: double.tryParse(value)),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      flex: 3,
+                      child: TextField(
+                        controller: _laborControllers[i],
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        textAlign: TextAlign.center,
+                        decoration: const InputDecoration(
+                            isDense: true, border: OutlineInputBorder()),
+                        onChanged: (String value) =>
+                            _updatePiece(i, labor: double.tryParse(value)),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+            const Divider(height: 22),
+            Text(
+              '合计 ${plan.totalGrams.toStringAsFixed(1)} 克，品牌店工费合计 ${plan.totalLaborAtBrandPrice.toStringAsFixed(0)} 元',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            ...costs.map((PlanChannelCost c) {
+              final bool isBest = identical(c, best);
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: <Widget>[
+                    if (isBest)
+                      Icon(Icons.check_circle,
+                          size: 16, color: Theme.of(context).colorScheme.primary)
+                    else
+                      const SizedBox(width: 16),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(c.channelName,
+                          style: TextStyle(
+                              fontWeight: isBest
+                                  ? FontWeight.bold
+                                  : FontWeight.normal)),
+                    ),
+                    Text('${c.costPerGram.toStringAsFixed(0)} 元/克',
+                        style: Theme.of(context).textTheme.bodySmall),
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      width: 84,
+                      child: Text('${c.total.toStringAsFixed(0)} 元',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontWeight:
+                                isBest ? FontWeight.bold : FontWeight.normal,
+                            color: isBest
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                          )),
+                    ),
+                  ],
+                ),
+              );
+            }),
+            const Divider(height: 22),
+            Text(
+              '整份清单：${worst.channelName} 约 ${worst.total.toStringAsFixed(0)} 元，'
+              '${best.channelName} 约 ${best.total.toStringAsFixed(0)} 元，'
+              '相差 ${gap.toStringAsFixed(0)} 元（${(gap / worst.total * 100).toStringAsFixed(0)}%）。',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '品牌店工费按你逐件填写；水贝与打金的工费取自渠道假设值（config/user.json）。',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],

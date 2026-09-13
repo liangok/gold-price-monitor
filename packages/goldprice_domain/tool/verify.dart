@@ -223,6 +223,50 @@ void main() {
       '2026-09-13T22:13:42+08:00'.compareTo('2026-09-13T22:04:43+08:00') > 0,
       true);
 
+  // ---------- 9. 五金清单逐件累加 ----------
+  const GoldPlan plan = GoldPlan.weddingFive;
+  checkNum('五金默认清单总克重', plan.totalGrams, 53);
+  checkNum('五金品牌工费合计', plan.totalLaborAtBrandPrice, 2840);
+  checkNum('折算每克品牌工费', plan.weightedBrandLaborPerGram, 2840 / 53);
+
+  const ChannelConfig planCfg = ChannelConfig(
+    budgetCny: 75000,
+    targetGrams: 55,
+    brandStore: ChannelAssumption(laborPerGram: 50),
+    shuibei: ChannelAssumption(benchmarkMarkup: 3, laborPerGram: 30),
+    bankBarDiy: ChannelAssumption(benchmarkMarkup: 12, laborPerGram: 25),
+  );
+
+  final List<PlanChannelCost> costs = pricePlan(
+    plan: plan,
+    benchmarkClose: 939.54,
+    brandName: '中国黄金',
+    brandGold: 1280,
+    bankBarPrice: 953.54,
+    config: planCfg,
+  );
+  checkNum('清单渠道数量', costs.length, 3);
+  final Map<String, PlanChannelCost> planByName = <String, PlanChannelCost>{
+    for (final PlanChannelCost c in costs) c.channelName: c,
+  };
+  checkNum('品牌店每克', planByName['中国黄金(品牌店)']!.costPerGram,
+      1280 + 2840 / 53, 1e-6);
+  checkNum('品牌店整单总价', planByName['中国黄金(品牌店)']!.total, 70680, 1e-6);
+  checkNum('水贝每克', planByName['深圳水贝']!.costPerGram, 972.54);
+  checkNum('水贝整单总价', planByName['深圳水贝']!.total, 51544.62, 1e-6);
+  checkNum('银行打金每克', planByName['银行金条+打金']!.costPerGram, 978.54);
+  checkNum('银行打金整单总价', planByName['银行金条+打金']!.total, 51862.62, 1e-6);
+  checkNum(
+      '整单可省金额',
+      planByName['中国黄金(品牌店)']!.total - planByName['深圳水贝']!.total,
+      19135.38,
+      1e-6);
+
+  final GoldPlan edited = plan.withPiece(
+      3, const GoldPiece(name: '手镯', grams: 38, laborPerGram: 50));
+  checkNum('改克重后总克重', edited.totalGrams, 63);
+  checkNum('原清单不受影响', plan.totalGrams, 53);
+
   // ---------- 汇总 ----------
   print('');
   if (_failures == 0) {
