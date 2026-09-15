@@ -1,17 +1,17 @@
 {
  "schema_version": 1,
- "generated_at": "2026-09-15T16:01:14+08:00",
+ "generated_at": "2026-09-15T21:05:41+08:00",
  "data_date": "2026-09-15",
  "benchmark": {
   "symbol": "Au99.99",
   "name": "上海黄金交易所 Au99.99",
   "unit": "CNY/g",
   "source": "sge.com.cn",
-  "date": "2026-09-14",
-  "open": 938.88,
-  "close": 932.8,
-  "low": 932.8,
-  "high": 950.0
+  "date": "2026-09-15",
+  "open": 956.0,
+  "close": 928.17,
+  "low": 920.0,
+  "high": 956.0
  },
  "brands": [
   {
@@ -88,7 +88,7 @@
    "region": "mainland",
    "unit": "CNY/g",
    "bar": 1118,
-   "platinum": 650,
+   "platinum": 680,
    "gold": 1293
   },
   {
@@ -189,7 +189,7 @@
     "name": "老凤祥",
     "price": 700
    },
-   "avg": 668.0,
+   "avg": 671.0,
    "spread": 90,
    "count": 10
   }
@@ -333,12 +333,12 @@
   }
  },
  "premium": {
-  "benchmark_date": "2026-09-14",
-  "benchmark_close": 932.8,
+  "benchmark_date": "2026-09-15",
+  "benchmark_close": 928.17,
   "brand_gold_avg": 1294.0,
   "brand_gold_min": 1263,
   "brand_gold_max": 1299,
-  "amount": 361.2,
-  "pct": 0.3872
+  "amount": 365.83,
+  "pct": 0.3941
  }
 }
