@@ -1,17 +1,17 @@
 {
  "schema_version": 1,
- "generated_at": "2026-09-16T15:54:14+08:00",
+ "generated_at": "2026-09-16T21:03:01+08:00",
  "data_date": "2026-09-16",
  "benchmark": {
   "symbol": "Au99.99",
   "name": "上海黄金交易所 Au99.99",
   "unit": "CNY/g",
   "source": "sge.com.cn",
-  "date": "2026-09-15",
-  "open": 956.0,
-  "close": 928.17,
-  "low": 920.0,
-  "high": 956.0
+  "date": "2026-09-16",
+  "open": 925.0,
+  "close": 936.75,
+  "low": 924.5,
+  "high": 938.59
  },
  "brands": [
   {
@@ -333,12 +333,12 @@
   }
  },
  "premium": {
-  "benchmark_date": "2026-09-15",
-  "benchmark_close": 928.17,
+  "benchmark_date": "2026-09-16",
+  "benchmark_close": 936.75,
   "brand_gold_avg": 1290.75,
   "brand_gold_min": 1259,
   "brand_gold_max": 1295,
-  "amount": 362.58,
-  "pct": 0.3906
+  "amount": 354.0,
+  "pct": 0.3779
  }
 }
