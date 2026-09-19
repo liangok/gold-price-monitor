@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-09-19T15:32:13+08:00",
+ "generated_at": "2026-09-19T20:14:45+08:00",
  "data_date": "2026-09-19",
  "benchmark": {
   "symbol": "Au99.99",
@@ -21,6 +21,14 @@
    "bar": 1170,
    "platinum": 700,
    "gold": 1321
+  },
+  {
+   "name": "中国黄金",
+   "region": "mainland",
+   "unit": "CNY/g",
+   "bar": 962,
+   "platinum": 620,
+   "gold": 1318
   },
   {
    "name": "周生生",
@@ -92,13 +100,6 @@
    "gold": 1311
   },
   {
-   "name": "中国黄金",
-   "region": "mainland",
-   "unit": "CNY/g",
-   "platinum": 620,
-   "gold": 1286
-  },
-  {
    "name": "菜百首饰",
    "region": "mainland",
    "unit": "CNY/g",
@@ -163,22 +164,22 @@
     "name": "老凤祥",
     "price": 1321
    },
-   "avg": 1311.0,
+   "avg": 1313.67,
    "spread": 36,
    "count": 12
   },
   "bar": {
    "min": {
-    "name": "菜百首饰",
-    "price": 1108
+    "name": "中国黄金",
+    "price": 962
    },
    "max": {
     "name": "老凤祥",
     "price": 1170
    },
-   "avg": 1154.0,
-   "spread": 62,
-   "count": 10
+   "avg": 1136.55,
+   "spread": 208,
+   "count": 11
   },
   "platinum": {
    "min": {
@@ -335,10 +336,10 @@
  "premium": {
   "benchmark_date": "2026-09-18",
   "benchmark_close": 947.09,
-  "brand_gold_avg": 1311.0,
+  "brand_gold_avg": 1313.67,
   "brand_gold_min": 1285,
   "brand_gold_max": 1321,
-  "amount": 363.91,
-  "pct": 0.3842
+  "amount": 366.58,
+  "pct": 0.3871
  }
 }

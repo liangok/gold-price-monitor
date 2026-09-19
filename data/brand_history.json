@@ -1,7 +1,7 @@
 {
  "schema_version": 1,
  "source": "证券之星 零售金商报价",
- "updated_at": "2026-09-19T15:31:56+08:00",
+ "updated_at": "2026-09-19T20:14:24+08:00",
  "records": [
   {
    "date": "2026-09-12",
@@ -1016,6 +1016,14 @@
      "gold": 1321
     },
     {
+     "name": "中国黄金",
+     "region": "mainland",
+     "unit": "CNY/g",
+     "bar": 962,
+     "platinum": 620,
+     "gold": 1318
+    },
+    {
      "name": "周生生",
      "region": "mainland",
      "unit": "CNY/g",
@@ -1083,13 +1091,6 @@
      "bar": 1160,
      "platinum": 714,
      "gold": 1311
-    },
-    {
-     "name": "中国黄金",
-     "region": "mainland",
-     "unit": "CNY/g",
-     "platinum": 620,
-     "gold": 1286
     },
     {
      "name": "菜百首饰",
