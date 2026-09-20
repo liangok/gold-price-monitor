@@ -1,7 +1,7 @@
 {
  "schema_version": 1,
  "source": "东方财富",
- "updated_at": "2026-09-19T20:14:45+08:00",
+ "updated_at": "2026-09-20T15:55:14+08:00",
  "series": {
   "gold_spot": {
    "name": "伦敦金现",
@@ -10,7 +10,7 @@
    "chg20_pct": -0.05875,
    "chg30_pct": -0.00272,
    "chg20_abs": -273.3,
-   "history_points": 5185
+   "history_points": 5184
   },
   "dxy": {
    "name": "美元指数",
