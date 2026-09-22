@@ -1,17 +1,17 @@
 {
  "schema_version": 1,
- "generated_at": "2026-09-22T15:56:42+08:00",
+ "generated_at": "2026-09-22T21:02:26+08:00",
  "data_date": "2026-09-22",
  "benchmark": {
   "symbol": "Au99.99",
   "name": "上海黄金交易所 Au99.99",
   "unit": "CNY/g",
   "source": "sge.com.cn",
-  "date": "2026-09-21",
-  "open": 944.5,
-  "close": 938.09,
-  "low": 937.5,
-  "high": 947.69
+  "date": "2026-09-22",
+  "open": 941.5,
+  "close": 931.98,
+  "low": 930.0,
+  "high": 951.5
  },
  "brands": [
   {
@@ -95,7 +95,7 @@
    "name": "中国黄金",
    "region": "mainland",
    "unit": "CNY/g",
-   "bar": 954,
+   "bar": 948,
    "platinum": 620,
    "gold": 1306
   },
@@ -171,14 +171,14 @@
   "bar": {
    "min": {
     "name": "中国黄金",
-    "price": 954
+    "price": 948
    },
    "max": {
     "name": "老凤祥",
     "price": 1165
    },
-   "avg": 1132.82,
-   "spread": 211,
+   "avg": 1132.27,
+   "spread": 217,
    "count": 11
   },
   "platinum": {
@@ -203,119 +203,119 @@
     "name": "工商银行",
     "product": "如意金条价格",
     "price": 958.18,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": true
    },
    {
     "name": "中国银行",
     "product": "投资金条价格",
     "price": 954.17,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": true
    },
    {
     "name": "建设银行",
     "product": "投资金条价格",
     "price": 956.5,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": true
    },
    {
     "name": "农业银行",
     "product": "投资金条价格",
     "price": 958.6,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": true
    },
    {
     "name": "民生银行",
     "product": "投资金条价格",
     "price": 952.35,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": true
    },
    {
     "name": "平安银行",
     "product": "投资金条价格",
     "price": 960.7,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": true
    },
    {
     "name": "邮政银行",
     "product": "投资金条价格",
     "price": 957.5,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": true
    },
    {
     "name": "招商银行",
     "product": "投资金条价格",
     "price": 958.5,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": true
    },
    {
     "name": "交通银行",
     "product": "投资金条价格",
     "price": 955.0,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": true
    },
    {
     "name": "中信银行",
     "product": "投资金条价格",
     "price": 951.4,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": true
    },
    {
     "name": "兴业银行",
     "product": "投资金条价格",
     "price": 954.63,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": true
    },
    {
     "name": "中国黄金",
     "product": "投资金条价格",
-    "price": 952.0,
-    "quote_time": "10:09:36",
+    "price": 945.8,
+    "quote_time": "16:09:30",
     "is_bank": false
    },
    {
     "name": "菜百首饰",
     "product": "投资金条价格",
     "price": 946.0,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": false
    },
    {
     "name": "周大福",
     "product": "投资金条价格",
     "price": 1017.0,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": false
    },
    {
     "name": "老凤祥",
     "product": "投资金条价格",
     "price": 1165.0,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": false
    },
    {
     "name": "老庙黄金",
     "product": "投资金条价格",
     "price": 1135.0,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": false
    },
    {
     "name": "周生生",
     "product": "工艺金条价格",
     "price": 1153.0,
-    "quote_time": "10:09:36",
+    "quote_time": "16:09:30",
     "is_bank": false
    }
   ],
@@ -334,12 +334,12 @@
   }
  },
  "premium": {
-  "benchmark_date": "2026-09-21",
-  "benchmark_close": 938.09,
+  "benchmark_date": "2026-09-22",
+  "benchmark_close": 931.98,
   "brand_gold_avg": 1309.42,
   "brand_gold_min": 1285,
   "brand_gold_max": 1317,
-  "amount": 371.33,
-  "pct": 0.3958
+  "amount": 377.44,
+  "pct": 0.405
  }
 }
