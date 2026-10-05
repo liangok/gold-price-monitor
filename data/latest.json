@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-05T17:36:00+08:00",
+ "generated_at": "2026-10-06T00:44:36+08:00",
  "data_date": "2026-10-05",
  "benchmark": {
   "symbol": "Au99.99",
@@ -18,7 +18,7 @@
    "name": "中国黄金",
    "region": "mainland",
    "unit": "CNY/g",
-   "bar": 911,
+   "bar": 914,
    "platinum": 605,
    "gold": 1262
   },
@@ -171,14 +171,14 @@
   "bar": {
    "min": {
     "name": "中国黄金",
-    "price": 911
+    "price": 914
    },
    "max": {
     "name": "老凤祥",
     "price": 1110
    },
-   "avg": 1079.82,
-   "spread": 199,
+   "avg": 1080.09,
+   "spread": 196,
    "count": 11
   },
   "platinum": {
