@@ -1,7 +1,7 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-04T21:38:30+08:00",
- "data_date": "2026-10-04",
+ "generated_at": "2026-10-05T17:36:00+08:00",
+ "data_date": "2026-10-05",
  "benchmark": {
   "symbol": "Au99.99",
   "name": "上海黄金交易所 Au99.99",
@@ -18,9 +18,33 @@
    "name": "中国黄金",
    "region": "mainland",
    "unit": "CNY/g",
-   "bar": 921,
+   "bar": 911,
    "platinum": 605,
    "gold": 1262
+  },
+  {
+   "name": "老庙黄金",
+   "region": "mainland",
+   "unit": "CNY/g",
+   "bar": 1080,
+   "platinum": 700,
+   "gold": 1255
+  },
+  {
+   "name": "周生生",
+   "region": "mainland",
+   "unit": "CNY/g",
+   "bar": 1101,
+   "platinum": 662,
+   "gold": 1252
+  },
+  {
+   "name": "老凤祥",
+   "region": "mainland",
+   "unit": "CNY/g",
+   "bar": 1110,
+   "platinum": 700,
+   "gold": 1251
   },
   {
    "name": "菜百首饰",
@@ -34,7 +58,7 @@
    "name": "周大生",
    "region": "mainland",
    "unit": "CNY/g",
-   "platinum": 655,
+   "platinum": 662,
    "gold": 1249
   },
   {
@@ -45,19 +69,11 @@
    "gold": 1249
   },
   {
-   "name": "周生生",
-   "region": "mainland",
-   "unit": "CNY/g",
-   "bar": 1101,
-   "platinum": 655,
-   "gold": 1249
-  },
-  {
    "name": "潮宏基",
    "region": "mainland",
    "unit": "CNY/g",
    "bar": 1101,
-   "platinum": 655,
+   "platinum": 662,
    "gold": 1249
   },
   {
@@ -72,7 +88,7 @@
    "region": "mainland",
    "unit": "CNY/g",
    "bar": 1101,
-   "platinum": 655,
+   "platinum": 662,
    "gold": 1249
   },
   {
@@ -80,78 +96,62 @@
    "region": "mainland",
    "unit": "CNY/g",
    "bar": 1101,
-   "platinum": 655,
+   "platinum": 662,
    "gold": 1247
-  },
-  {
-   "name": "老凤祥",
-   "region": "mainland",
-   "unit": "CNY/g",
-   "bar": 1104,
-   "platinum": 700,
-   "gold": 1246
-  },
-  {
-   "name": "老庙黄金",
-   "region": "mainland",
-   "unit": "CNY/g",
-   "bar": 1071,
-   "platinum": 655,
-   "gold": 1246
   },
   {
    "name": "周六福",
    "region": "mainland",
    "unit": "CNY/g",
    "bar": 1101,
-   "platinum": 675,
+   "platinum": 682,
    "gold": 1244
   },
   {
    "name": "香港周大福",
    "region": "hk",
    "unit": "HKD/两",
-   "gold": 47686
+   "gold": 47873
   },
   {
    "name": "香港六福珠宝",
    "region": "hk",
    "unit": "HKD/两",
-   "bar": 42071,
-   "platinum": 20437,
-   "gold": 47311
+   "bar": 42258,
+   "platinum": 20624,
+   "gold": 47498
   },
   {
    "name": "香港周生生",
    "region": "hk",
    "unit": "HKD/两",
-   "bar": 42071,
-   "platinum": 20437,
-   "gold": 47311
+   "bar": 42258,
+   "platinum": 20624,
+   "gold": 47498
   },
   {
    "name": "香港老凤祥",
    "region": "hk",
    "unit": "HKD/两",
-   "bar": 42071,
-   "platinum": 20437,
-   "gold": 47311
+   "bar": 42258,
+   "platinum": 20624,
+   "gold": 47498
   },
   {
    "name": "香港谢瑞麟",
    "region": "hk",
    "unit": "HKD/两",
-   "bar": 42071,
-   "platinum": 20437,
-   "gold": 47311
+   "bar": 42258,
+   "platinum": 20624,
+   "gold": 47498
   },
   {
    "name": "香港金至尊",
    "region": "hk",
    "unit": "HKD/两",
-   "bar": 42071,
-   "platinum": 20437,
-   "gold": 47311
+   "bar": 42258,
+   "platinum": 20624,
+   "gold": 47498
   }
  ],
  "brand_stats": {
@@ -164,21 +164,21 @@
     "name": "中国黄金",
     "price": 1262
    },
-   "avg": 1249.08,
+   "avg": 1250.5,
    "spread": 18,
    "count": 12
   },
   "bar": {
    "min": {
     "name": "中国黄金",
-    "price": 921
+    "price": 911
    },
    "max": {
     "name": "老凤祥",
-    "price": 1104
+    "price": 1110
    },
-   "avg": 1079.36,
-   "spread": 183,
+   "avg": 1079.82,
+   "spread": 199,
    "count": 11
   },
   "platinum": {
@@ -187,159 +187,159 @@
     "price": 595
    },
    "max": {
-    "name": "老凤祥",
+    "name": "老庙黄金",
     "price": 700
    },
-   "avg": 650.5,
+   "avg": 659.2,
    "spread": 105,
    "count": 10
   }
  },
  "bank_bars": {
-  "date": "2026-10-04",
+  "date": "2026-10-05",
   "unit": "CNY/g",
   "items": [
    {
     "name": "工商银行",
     "product": "如意金条价格",
-    "price": 913.47,
-    "quote_time": "10:10:39",
+    "price": 916.65,
+    "quote_time": "15:10:42",
     "is_bank": true
    },
    {
     "name": "中国银行",
     "product": "投资金条价格",
     "price": 921.73,
-    "quote_time": "10:10:39",
+    "quote_time": "15:10:42",
     "is_bank": true
    },
    {
     "name": "建设银行",
     "product": "投资金条价格",
-    "price": 917.6,
-    "quote_time": "10:10:39",
+    "price": 913.1,
+    "quote_time": "15:10:42",
     "is_bank": true
    },
    {
     "name": "农业银行",
     "product": "投资金条价格",
     "price": 923.32,
-    "quote_time": "10:10:39",
+    "quote_time": "15:10:42",
     "is_bank": true
    },
    {
     "name": "民生银行",
     "product": "投资金条价格",
     "price": 917.78,
-    "quote_time": "10:10:39",
+    "quote_time": "15:10:42",
     "is_bank": true
    },
    {
     "name": "平安银行",
     "product": "投资金条价格",
     "price": 925.31,
-    "quote_time": "10:10:39",
+    "quote_time": "15:10:42",
     "is_bank": true
    },
    {
     "name": "邮政银行",
     "product": "投资金条价格",
     "price": 919.0,
-    "quote_time": "10:10:39",
+    "quote_time": "15:10:42",
     "is_bank": true
    },
    {
     "name": "招商银行",
     "product": "投资金条价格",
     "price": 921.56,
-    "quote_time": "10:10:39",
+    "quote_time": "15:10:42",
     "is_bank": true
    },
    {
     "name": "交通银行",
     "product": "投资金条价格",
     "price": 925.0,
-    "quote_time": "10:10:39",
+    "quote_time": "15:10:42",
     "is_bank": true
    },
    {
     "name": "中信银行",
     "product": "投资金条价格",
     "price": 919.0,
-    "quote_time": "10:10:39",
+    "quote_time": "15:10:42",
     "is_bank": true
    },
    {
     "name": "兴业银行",
     "product": "投资金条价格",
     "price": 919.43,
-    "quote_time": "10:10:39",
+    "quote_time": "15:10:42",
     "is_bank": true
    },
    {
     "name": "中国黄金",
     "product": "投资金条价格",
-    "price": 910.0,
-    "quote_time": "10:10:39",
+    "price": 911.8,
+    "quote_time": "15:10:42",
     "is_bank": false
    },
    {
     "name": "菜百首饰",
     "product": "投资金条价格",
-    "price": 914.0,
-    "quote_time": "10:10:39",
+    "price": 917.0,
+    "quote_time": "15:10:42",
     "is_bank": false
    },
    {
     "name": "周大福",
     "product": "投资金条价格",
     "price": 961.0,
-    "quote_time": "10:10:39",
+    "quote_time": "15:10:42",
     "is_bank": false
    },
    {
     "name": "老凤祥",
     "product": "投资金条价格",
-    "price": 1104.0,
-    "quote_time": "10:10:39",
+    "price": 1110.0,
+    "quote_time": "15:10:42",
     "is_bank": false
    },
    {
     "name": "老庙黄金",
     "product": "投资金条价格",
-    "price": 1071.0,
-    "quote_time": "10:10:39",
+    "price": 1080.0,
+    "quote_time": "15:10:42",
     "is_bank": false
    },
    {
     "name": "周生生",
     "product": "工艺金条价格",
-    "price": 1099.0,
-    "quote_time": "10:10:39",
+    "price": 1102.0,
+    "quote_time": "15:10:42",
     "is_bank": false
    }
   ],
   "stats": {
    "min": {
-    "name": "工商银行",
-    "price": 913.47
+    "name": "建设银行",
+    "price": 913.1
    },
    "max": {
     "name": "平安银行",
     "price": 925.31
    },
-   "avg": 920.29,
-   "spread": 11.84,
+   "avg": 920.17,
+   "spread": 12.21,
    "count": 11
   }
  },
  "premium": {
   "benchmark_date": "2026-09-30",
   "benchmark_close": 907.32,
-  "brand_gold_avg": 1249.08,
+  "brand_gold_avg": 1250.5,
   "brand_gold_min": 1244,
   "brand_gold_max": 1262,
-  "amount": 341.76,
-  "pct": 0.3767
+  "amount": 343.18,
+  "pct": 0.3782
  }
 }
