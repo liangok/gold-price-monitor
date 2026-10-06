@@ -1,7 +1,7 @@
 {
  "schema_version": 1,
  "source": "证券之星 零售金商报价",
- "updated_at": "2026-10-06T17:23:58+08:00",
+ "updated_at": "2026-10-06T22:41:26+08:00",
  "records": [
   {
    "date": "2026-09-12",
@@ -3459,7 +3459,7 @@
      "name": "中国黄金",
      "region": "mainland",
      "unit": "CNY/g",
-     "bar": 908,
+     "bar": 914,
      "platinum": 605,
      "gold": 1262
     },
