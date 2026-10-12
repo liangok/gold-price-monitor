@@ -1,34 +1,34 @@
 {
  "schema_version": 1,
  "source": "东方财富",
- "updated_at": "2026-10-11T22:35:33+08:00",
+ "updated_at": "2026-10-12T17:44:02+08:00",
  "series": {
   "gold_spot": {
    "name": "伦敦金现",
-   "date": "2026-10-09",
-   "value": 4194.39,
-   "chg20_pct": -0.02425,
-   "chg30_pct": -0.05723,
-   "chg20_abs": -104.24,
+   "date": "2026-10-12",
+   "value": 4171.53,
+   "chg20_pct": -0.02739,
+   "chg30_pct": -0.03507,
+   "chg20_abs": -117.62,
    "history_points": 5184
   },
   "dxy": {
    "name": "美元指数",
-   "date": "2026-10-09",
-   "value": 101.92,
-   "chg20_pct": 0.02877,
-   "chg30_pct": 0.02545,
-   "chg20_abs": 2.8501,
-   "history_points": 10583
+   "date": "2026-10-12",
+   "value": 102.0998,
+   "chg20_pct": 0.02671,
+   "chg30_pct": 0.02764,
+   "chg20_abs": 2.6559,
+   "history_points": 10584
   },
   "usdcny": {
    "name": "在岸人民币",
-   "date": "2026-10-09",
-   "value": 6.6912,
-   "chg20_pct": -0.00197,
-   "chg30_pct": -0.0028,
-   "chg20_abs": -0.0132,
-   "history_points": 8030
+   "date": "2026-10-12",
+   "value": 6.6917,
+   "chg20_pct": -0.001,
+   "chg30_pct": -0.00439,
+   "chg20_abs": -0.0067,
+   "history_points": 8031
   },
   "us2y": {
    "name": "美债2年",
