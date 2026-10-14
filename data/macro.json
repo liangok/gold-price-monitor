@@ -1,15 +1,15 @@
 {
  "schema_version": 1,
  "source": "东方财富",
- "updated_at": "2026-10-14T16:00:19+08:00",
+ "updated_at": "2026-10-14T21:17:14+08:00",
  "series": {
   "gold_spot": {
    "name": "伦敦金现",
    "date": "2026-10-14",
-   "value": 4149.41,
-   "chg20_pct": -0.04455,
-   "chg30_pct": -0.07261,
-   "chg20_abs": -193.4,
+   "value": 4088.01,
+   "chg20_pct": -0.05682,
+   "chg30_pct": -0.08452,
+   "chg20_abs": -246.67,
    "history_points": 5184
   },
   "dxy": {
