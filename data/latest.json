@@ -1,17 +1,17 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-22T15:56:29+08:00",
+ "generated_at": "2026-10-22T21:23:40+08:00",
  "data_date": "2026-10-22",
  "benchmark": {
   "symbol": "Au99.99",
   "name": "上海黄金交易所 Au99.99",
   "unit": "CNY/g",
   "source": "sge.com.cn",
-  "date": "2026-10-21",
-  "open": 888.0,
-  "close": 887.5,
-  "low": 883.75,
-  "high": 897.99
+  "date": "2026-10-22",
+  "open": 890.0,
+  "close": 880.3,
+  "low": 874.02,
+  "high": 891.0
  },
  "brands": [
   {
@@ -88,14 +88,14 @@
    "region": "mainland",
    "unit": "CNY/g",
    "bar": 1058,
-   "platinum": 700,
+   "platinum": 618,
    "gold": 1233
   },
   {
    "name": "中国黄金",
    "region": "mainland",
    "unit": "CNY/g",
-   "bar": 901,
+   "bar": 898,
    "platinum": 555,
    "gold": 1232
   },
@@ -171,14 +171,14 @@
   "bar": {
    "min": {
     "name": "中国黄金",
-    "price": 901
+    "price": 898
    },
    "max": {
     "name": "周大福",
     "price": 1090
    },
-   "avg": 1066.45,
-   "spread": 189,
+   "avg": 1066.18,
+   "spread": 192,
    "count": 11
   },
   "platinum": {
@@ -187,11 +187,11 @@
     "price": 555
    },
    "max": {
-    "name": "老庙黄金",
-    "price": 700
+    "name": "老凤祥",
+    "price": 650
    },
-   "avg": 618.8,
-   "spread": 145,
+   "avg": 610.6,
+   "spread": 95,
    "count": 10
   }
  },
@@ -355,12 +355,12 @@
   }
  },
  "premium": {
-  "benchmark_date": "2026-10-21",
-  "benchmark_close": 887.5,
+  "benchmark_date": "2026-10-22",
+  "benchmark_close": 880.3,
   "brand_gold_avg": 1235.58,
   "brand_gold_min": 1232,
   "brand_gold_max": 1238,
-  "amount": 348.08,
-  "pct": 0.3922
+  "amount": 355.28,
+  "pct": 0.4036
  }
 }
