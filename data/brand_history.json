@@ -1,7 +1,7 @@
 {
  "schema_version": 1,
  "source": "证券之星 零售金商报价",
- "updated_at": "2026-10-24T20:25:16+08:00",
+ "updated_at": "2026-10-25T15:48:08+08:00",
  "records": [
   {
    "date": "2026-09-12",
@@ -6046,6 +6046,150 @@
   },
   {
    "date": "2026-10-24",
+   "brands": [
+    {
+     "name": "老凤祥",
+     "region": "mainland",
+     "unit": "CNY/g",
+     "bar": 1063,
+     "platinum": 650,
+     "gold": 1206
+    },
+    {
+     "name": "菜百首饰",
+     "region": "mainland",
+     "unit": "CNY/g",
+     "bar": 1020,
+     "platinum": 545,
+     "gold": 1205
+    },
+    {
+     "name": "周大生",
+     "region": "mainland",
+     "unit": "CNY/g",
+     "platinum": 596,
+     "gold": 1202
+    },
+    {
+     "name": "周大福",
+     "region": "mainland",
+     "unit": "CNY/g",
+     "bar": 1060,
+     "gold": 1202
+    },
+    {
+     "name": "潮宏基",
+     "region": "mainland",
+     "unit": "CNY/g",
+     "bar": 1060,
+     "platinum": 596,
+     "gold": 1202
+    },
+    {
+     "name": "谢瑞麟",
+     "region": "mainland",
+     "unit": "CNY/g",
+     "bar": 1060,
+     "gold": 1202
+    },
+    {
+     "name": "金至尊",
+     "region": "mainland",
+     "unit": "CNY/g",
+     "bar": 1060,
+     "platinum": 596,
+     "gold": 1202
+    },
+    {
+     "name": "六福珠宝",
+     "region": "mainland",
+     "unit": "CNY/g",
+     "bar": 1060,
+     "platinum": 596,
+     "gold": 1200
+    },
+    {
+     "name": "周生生",
+     "region": "mainland",
+     "unit": "CNY/g",
+     "bar": 1060,
+     "platinum": 596,
+     "gold": 1200
+    },
+    {
+     "name": "中国黄金",
+     "region": "mainland",
+     "unit": "CNY/g",
+     "bar": 879,
+     "platinum": 545,
+     "gold": 1198
+    },
+    {
+     "name": "周六福",
+     "region": "mainland",
+     "unit": "CNY/g",
+     "bar": 1060,
+     "platinum": 616,
+     "gold": 1197
+    },
+    {
+     "name": "老庙黄金",
+     "region": "mainland",
+     "unit": "CNY/g",
+     "bar": 1021,
+     "platinum": 700,
+     "gold": 1196
+    },
+    {
+     "name": "香港周大福",
+     "region": "hk",
+     "unit": "HKD/两",
+     "gold": 46114
+    },
+    {
+     "name": "香港六福珠宝",
+     "region": "hk",
+     "unit": "HKD/两",
+     "bar": 40611,
+     "platinum": 18678,
+     "gold": 46038
+    },
+    {
+     "name": "香港周生生",
+     "region": "hk",
+     "unit": "HKD/两",
+     "bar": 40611,
+     "platinum": 18678,
+     "gold": 46038
+    },
+    {
+     "name": "香港老凤祥",
+     "region": "hk",
+     "unit": "HKD/两",
+     "bar": 40611,
+     "platinum": 18678,
+     "gold": 46038
+    },
+    {
+     "name": "香港谢瑞麟",
+     "region": "hk",
+     "unit": "HKD/两",
+     "bar": 40611,
+     "platinum": 18678,
+     "gold": 46038
+    },
+    {
+     "name": "香港金至尊",
+     "region": "hk",
+     "unit": "HKD/两",
+     "bar": 40611,
+     "platinum": 18678,
+     "gold": 46038
+    }
+   ]
+  },
+  {
+   "date": "2026-10-25",
    "brands": [
     {
      "name": "老凤祥",
