@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-29T16:53:53+08:00",
+ "generated_at": "2026-10-29T22:54:48+08:00",
  "data_date": "2026-10-29",
  "benchmark": {
   "symbol": "Au99.99",
@@ -79,7 +79,7 @@
    "name": "中国黄金",
    "region": "mainland",
    "unit": "CNY/g",
-   "bar": 884,
+   "bar": 881,
    "platinum": 545,
    "gold": 1213
   },
@@ -171,14 +171,14 @@
   "bar": {
    "min": {
     "name": "中国黄金",
-    "price": 884
+    "price": 881
    },
    "max": {
     "name": "周生生",
     "price": 1073
    },
-   "avg": 1048.09,
-   "spread": 189,
+   "avg": 1047.82,
+   "spread": 192,
    "count": 11
   },
   "platinum": {
