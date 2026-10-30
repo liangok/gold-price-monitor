@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-30T16:58:27+08:00",
+ "generated_at": "2026-10-30T22:46:51+08:00",
  "data_date": "2026-10-30",
  "benchmark": {
   "symbol": "Au99.99",
@@ -203,140 +203,140 @@
     "name": "工商银行",
     "product": "如意金条价格",
     "price": 877.16,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": true
    },
    {
     "name": "中国银行",
     "product": "投资金条价格",
     "price": 874.4,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": true
    },
    {
     "name": "建设银行",
     "product": "投资金条价格",
     "price": 875.0,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": true
    },
    {
     "name": "农业银行",
     "product": "投资金条价格",
     "price": 880.99,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": true
    },
    {
     "name": "民生银行",
     "product": "投资金条价格",
     "price": 872.47,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": true
    },
    {
     "name": "平安银行",
     "product": "投资金条价格",
     "price": 880.5,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": true
    },
    {
     "name": "邮政银行",
     "product": "投资金条价格",
     "price": 877.0,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": true
    },
    {
     "name": "招商银行",
     "product": "投资金条价格",
     "price": 874.7,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": true
    },
    {
     "name": "交通银行",
     "product": "投资金条价格",
     "price": 878.0,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": true
    },
    {
     "name": "中信银行",
     "product": "投资金条价格",
     "price": 875.3,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": true
    },
    {
     "name": "兴业银行",
     "product": "投资金条价格",
     "price": 874.65,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": true
    },
    {
     "name": "中国黄金",
     "product": "投资金条价格",
-    "price": 872.3,
-    "quote_time": "11:10:20",
+    "price": 858.9,
+    "quote_time": "21:10:47",
     "is_bank": false
    },
    {
     "name": "菜百首饰",
     "product": "投资金条价格",
-    "price": 873.0,
-    "quote_time": "11:10:20",
+    "price": 865.6,
+    "quote_time": "21:10:47",
     "is_bank": false
    },
    {
     "name": "周大福",
     "product": "工艺金条价格",
     "price": 1057.0,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": false
    },
    {
     "name": "周大福",
     "product": "投资金条价格",
     "price": 927.0,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": false
    },
    {
     "name": "六福珠宝",
     "product": "工艺金条价格",
     "price": 1055.0,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": false
    },
    {
     "name": "金至尊珠宝",
     "product": "工艺金条价格",
     "price": 1055.0,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": false
    },
    {
     "name": "老凤祥",
     "product": "投资金条价格",
     "price": 1057.0,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": false
    },
    {
     "name": "老庙黄金",
     "product": "投资金条价格",
     "price": 1021.0,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": false
    },
    {
     "name": "周生生",
     "product": "工艺金条价格",
     "price": 1059.0,
-    "quote_time": "11:10:20",
+    "quote_time": "21:10:47",
     "is_bank": false
    }
   ],
