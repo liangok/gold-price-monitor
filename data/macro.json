@@ -1,24 +1,24 @@
 {
  "schema_version": 1,
  "source": "东方财富",
- "updated_at": "2026-11-03T18:02:14+08:00",
+ "updated_at": "2026-11-03T23:46:44+08:00",
  "series": {
   "gold_spot": {
    "name": "伦敦金现",
    "date": "2026-11-03",
-   "value": 3906.69,
-   "chg20_pct": -0.04946,
-   "chg30_pct": -0.08861,
-   "chg20_abs": -203.31,
+   "value": 3935.3,
+   "chg20_pct": -0.04384,
+   "chg30_pct": -0.08323,
+   "chg20_abs": -180.21,
    "history_points": 5184
   },
   "dxy": {
    "name": "美元指数",
    "date": "2026-11-03",
-   "value": 101.7086,
-   "chg20_pct": -0.00112,
-   "chg30_pct": 0.0117,
-   "chg20_abs": -0.114,
+   "value": 101.6232,
+   "chg20_pct": -0.00196,
+   "chg30_pct": 0.01085,
+   "chg20_abs": -0.1994,
    "history_points": 10600
   },
   "usdcny": {
